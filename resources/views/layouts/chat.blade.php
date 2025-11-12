@@ -10,7 +10,7 @@
     <title>@yield('title')</title>
 
     {{-- Scripts y Estilos Base --}}
-{{--    @vite(['resources/css/app.css', 'resources/js/app.js'])--}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- Aquí se inyectarán los estilos específicos de la vista de chat --}}
     @stack('styles')
