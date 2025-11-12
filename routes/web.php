@@ -9,6 +9,11 @@ use App\Http\Controllers\UserController;
 
 
 
+
+
+// Grupo de rutas protegidas (requiere login)
+Route::middleware('auth')->group(function () {
+
 Route::get('/responses', [MessageController::class, 'showResponses'])->name('responses');
 Route::post('/responses/reply', [MessageController::class, 'reply'])->name('responses.reply');
 
@@ -30,12 +35,6 @@ Route::post('/responses/reply', [MessageController::class, 'reply'])
     ->name('responses.reply')
     ->middleware('auth');
 
-//Route::resource('users', UserController::class);
-
-
-
-// Grupo de rutas protegidas (requiere login)
-Route::middleware('auth')->group(function () {
 
     // Dashboard con permiso 'send-message'
     Route::get('/dashboard', function () {

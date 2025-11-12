@@ -14,7 +14,8 @@
     
     {{-- Aquí se inyectarán los estilos específicos de la vista de chat --}}
     @stack('styles')
-</head>
+
+</head> {{-- <-- SOLO UNA ETIQUETA DE CIERRE --}}
 <body class="font-sans antialiased" style="height: 100%; margin: 0; padding: 0; overflow: hidden;">
     
     {{-- Contenedor principal de la app --}}
@@ -28,6 +29,8 @@
         </main>
     </div>
     
+    {{-- Aquí se inyectarán los scripts específicos de la vista de chat --}}
     @stack('scripts')
+    
 </body>
 </html>

@@ -1,13 +1,16 @@
-@extends('layouts.chat') 
+@extends('layouts.chat')
 
 @section('title', 'Panel de Respuestas | ' . ($instance->name ?? 'Selecciona Área'))
 
+{{-- ======================================================================= --}}
+{{-- 1. SECCIÓN DE ESTILOS (CSS)                                           --}}
+{{-- ======================================================================= --}}
 @push('styles')
 {{-- Incluye Font Awesome para todos los íconos --}}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <style>
 /* ================================================= */
-/* 1. LAYOUT GENERAL (Depende del layouts/app.blade.php) */
+/* 1. LAYOUT GENERAL */
 /* ================================================= */
 .whatsapp-app-container {
     display: flex;
@@ -15,7 +18,7 @@
     width: 100%;
     margin: 0 auto;
     max-width: 1600px;
-    background-color: #f0f2f5; 
+    background-color: #f0f2f5;
 }
 
 .chat-layout {
@@ -48,13 +51,58 @@
 .chat-contact a {
     text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px;
 }
-.contact-info { flex-grow: 1; }
-.contact-time { font-size: 11px; color: #888; flex-shrink: 0; }
+
+/* --- MEJORA: Avatar real (imagen) --- */
 .header-avatar {
     width: 40px; height: 40px; border-radius: 50%; background-color: #00a884;
     display: flex; align-items: center; justify-content: center; color: #fff;
     font-weight: bold; font-size: 14px; flex-shrink: 0;
+    overflow: hidden; /* Para que la imagen no se salga */
 }
+.header-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Asegura que la imagen cubra el círculo */
+}
+/* --- FIN MEJORA --- */
+
+
+/* --- Estilos para lista de chat (No Leídos) --- */
+.contact-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+.contact-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.contact-time {
+    font-size: 11px;
+    color: #888;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+.contact-row .last-message {
+    font-size: 13px;
+    color: #555;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
+}
+.unread-badge {
+    background-color: #25d366;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
 
 /* ================================================= */
 /* 3. CABECERAS */
@@ -65,30 +113,33 @@
     display: flex;
     align-items: center;
     border-bottom: 1px solid #ededed;
-    background-color: #f0f2f5; 
+    background-color: #f0f2f5;
     font-size: 16px;
 }
+.chat-sidebar-header {
+    justify-content: space-between;
+}
 .chat-header {
-    background-color: #ededed; 
+    background-color: #ededed;
     justify-content: flex-start;
     gap: 12px;
 }
 
 /* ================================================= */
-/* 4. CHAT PRINCIPAL (CORRECCIÓN DE SCROLL) */
+/* 4. CHAT PRINCIPAL */
 /* ================================================= */
 .chat-main {
     flex: 1;
     display: flex;
-    flex-direction: column; /* CRÍTICO para scroll */
+    flex-direction: column;
     background: url('https://i.imgur.com/gK37Q9h.png') repeat;
     background-size: cover;
 }
 
 .chat-thread {
-    flex: 1; /* CRÍTICO: Ocupa todo el espacio restante para que el scroll funcione */
+    flex: 1;
     padding: 20px 8%;
-    overflow-y: auto; /* HABILITA EL SCROLL aquí */
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
@@ -116,28 +167,84 @@
 
 .chat-input {
     display: flex; align-items: center; padding: 8px 16px; border-top: 1px solid #e0e0e0; background-color: #f0f2f5; gap: 8px;
+    position: relative; /* Para el preview del archivo Y EL EMOJI PICKER */
 }
 .chat-input textarea {
     flex: 1; resize: none; padding: 10px 14px; border: none; border-radius: 20px; background-color: #fff; font-size: 14px; min-height: 40px; max-height: 120px; overflow-y: auto;
 }
-.chat-input button[type="submit"] {
-    background-color: #00a884; color: white; border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-}
 .icon-button {
     background: none; border: none; color: #54656f; font-size: 24px; cursor: pointer; padding: 8px; border-radius: 50%;
+}
+#file-name-preview {
+    position: absolute;
+    top: -28px;
+    left: 80px;
+    background: #fff;
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    display: none;
+}
+
+.chat-input .send-button,
+.chat-input .mic-button {
+    background-color: #00a884; /* Verde WhatsApp */
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+/* --- MEJORA: Estilo para el botón de Micrófono grabando --- */
+.mic-button.is-recording {
+    background-color: #e60023; /* Rojo */
+    animation: pulse 1s infinite;
+}
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(230, 0, 35, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(230, 0, 35, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(230, 0, 35, 0); }
+}
+
+/* --- MEJORA: Estilos para el Emoji Picker --- */
+emoji-picker {
+    position: absolute;
+    bottom: 60px; /* Justo encima del input */
+    left: 10px;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    display: none; /* Oculto por defecto */
+}
+emoji-picker.visible {
+    display: block;
 }
 </style>
 @endpush
 
+{{-- ======================================================================= --}}
+{{-- 2. SECCIÓN DE CONTENIDO (HTML)                                         --}}
+{{-- ======================================================================= --}}
 @section('content')
 @php
     $numeroSeleccionado = preg_replace('/[^0-9]/', '', $numeroSeleccionado ?? '');
     $userName = Auth::check() ? Auth::user()->name : 'Agente';
+    // MEJORA: Obtenemos el avatar del usuario (agente)
+    // Asume que tu User model tiene 'avatar_url' (si no, cámbialo o déjalo)
+    $userAvatar = Auth::check() ? Auth::user()->avatar_url : null; 
 @endphp
 
 <div class="whatsapp-app-container">
-    {{-- Alertas --}}
-    @if(session('warning') || session('success'))
+    {{-- Alertas (Sin cambios) --}}
+    @if(session('warning') || session('success') || $errors->any())
         <div style="position: fixed; top: 0; width: 100%; z-index: 1000; text-align: center;">
             @if(session('warning'))
                 <div class="alert alert-warning p-2 text-center mb-0">⚠️ {{ session('warning') }}</div>
@@ -145,16 +252,36 @@
             @if(session('success'))
                 <div class="alert alert-success p-2 text-center mb-0">✅ {{ session('success') }}</div>
             @endif
+            @if($errors->any())
+                <div class="alert alert-danger p-2 text-center mb-0" style="max-height: 100px; overflow-y: auto;">
+                    @foreach ($errors->all() as $error)
+                        <span>{{ $error }}</span><br>
+                    @endforeach
+                </div>
+            @endif
         </div>
     @endif
 
     <div class="chat-layout">
-        {{-- SIDEBAR --}}
+
+        {{-- ================================================= --}}
+        {{-- 1. SIDEBAR (LISTA DE CONTACTOS)                 --}}
+        {{-- ================================================= --}}
         <div class="chat-sidebar">
             <div class="chat-sidebar-header">
-                <h5><i class="fas fa-user-circle me-2"></i> {{ $instance->name ?? $userName }}</h5>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    
+                    <div class="header-avatar">
+                        @if($userAvatar)
+                            <img src="{{ $userAvatar }}" alt="Avatar">
+                        @else
+                            {{-- Fallback al ícono si no hay foto --}}
+                            <i class="fas fa-user-circle" style="font-size: 40px; color: #ccc;"></i>
+                        @endif
+                    </div>
+                    <h5>{{ $instance->name ?? $userName }}</h5>
+                </div>
                 <div>
-                    <button class="icon-button" title="Nuevo chat"><i class="fas fa-comment"></i></button>
                     <button class="icon-button" title="Menú"><i class="fas fa-ellipsis-v"></i></button>
                 </div>
             </div>
@@ -163,25 +290,55 @@
                 @php
                     $ultimo = $conversacionItem->first();
                     $numeroClienteLimpio = preg_replace('/[^0-9]/', '', $numeroCliente);
+                    
+                    $unreadCount = $conversacionItem
+                        ->where('is_read', false)
+                        ->where('direction', 'inbound')
+                        ->count();
+                    
+                    // MEJORA: Esta es la variable que tu CONTROLADOR debe enviar
+                    // gracias a la corrección que hicimos en `showResponses`
+                    $contactAvatarUrl = $ultimo->contact_avatar_url ?? null; 
                 @endphp
+                
                 <div class="chat-contact {{ $numeroSeleccionado === $numeroClienteLimpio ? 'active' : '' }}">
                     <a href="{{ url('/responses?phone=' . $numeroClienteLimpio) }}">
-                        <div class="header-avatar">{{ substr($numeroClienteLimpio, -2) }}</div>
+                        
+                        <div class="header-avatar">
+                            @if($contactAvatarUrl)
+                                <img src="{{ $contactAvatarUrl }}" alt="Avatar de {{ $numeroClienteLimpio }}">
+                            @else
+                                {{-- Fallback a los números (como lo tenías) --}}
+                                {{ substr($numeroClienteLimpio, -2) }}
+                            @endif
+                        </div>
                         <div class="contact-info">
-                            <strong>{{ $numeroClienteLimpio }}</strong>
-                            <small>
-                                @if(isset($ultimo->media_type) && $ultimo->media_type === 'image')
-                                    <i class="fas fa-image"></i> Imagen
-                                @elseif(isset($ultimo->media_type) && $ultimo->media_type === 'audio')
-                                    <i class="fas fa-microphone"></i> Audio
-                                @else
-                                    {{ \Illuminate\Support\Str::limit($ultimo->message ?? 'Sin mensajes', 30) }}
+                            <div class="contact-row">
+                                <strong>{{ $numeroClienteLimpio }}</strong>
+                                <small class="contact-time">
+                                    {{ $ultimo->received_at ? \Carbon\Carbon::parse($ultimo->received_at)->format('H:i') : '' }}
+                                </small>
+                            </div>
+                            <div class="contact-row">
+                                <small class="last-message">
+                                    @if($ultimo->direction == 'outbound')
+                                        <i class="fas fa-check-double" style="color: #53bdeb; font-size: 11px;"></i>
+                                    @endif
+                                    @if(isset($ultimo->media_type) && $ultimo->media_type === 'image')
+                                        <i class="fas fa-image"></i> Imagen
+                                    @elseif(isset($ultimo->media_type) && $ultimo->media_type === 'audio')
+                                        <i class="fas fa-microphone"></i> Audio
+                                    @else
+                                        {{ \Illuminate\Support\Str::limit($ultimo->message ?? 'Sin mensajes', 30) }}
+                                    @endif
+                                </small>
+                                
+                                @if($unreadCount > 0)
+                                    <span class="unread-badge">{{ $unreadCount }}</span>
                                 @endif
-                            </small>
+                            </div>
                         </div>
-                        <div class="contact-time">
-                            {{ $ultimo->received_at ? \Carbon\Carbon::parse($ultimo->received_at)->format('H:i') : '' }}
-                        </div>
+
                     </a>
                 </div>
             @empty
@@ -189,12 +346,26 @@
             @endforelse
         </div>
 
-        {{-- PANEL DE CONVERSACIÓN --}}
+        {{-- ================================================= --}}
+        {{-- 2. PANEL DE CONVERSACIÓN PRINCIPAL                --}}
+        {{-- ================================================= --}}
         <div class="chat-main">
             <div class="chat-header">
                 @if ($numeroSeleccionado)
+                    @php
+                        // MEJORA: Busca la foto del chat seleccionado
+                        $headerAvatarUrl = null;
+                        if (isset($chatsConRespuestas[$numeroSeleccionado])) {
+                            $headerAvatarUrl = $chatsConRespuestas[$numeroSeleccionado]->first()->contact_avatar_url ?? null;
+                        }
+                    @endphp
+
                     <div class="header-avatar" style="background-color: #54656f;">
-                        {{ substr($numeroSeleccionado, -2) }}
+                         @if($headerAvatarUrl)
+                            <img src="{{ $headerAvatarUrl }}" alt="Avatar de {{ $numeroSeleccionado }}">
+                        @else
+                            {{ substr($numeroSeleccionado, -2) }}
+                        @endif
                     </div>
                     <div>
                         <strong>{{ $numeroSeleccionado }}</strong><br>
@@ -224,7 +395,7 @@
                         @endif
 
                         @if(!empty($mensaje->message))
-                            <div class="chat-text">{{ $mensaje->message }}</div>
+                            <div class="chat-text">{!! nl2br(e($mensaje->message)) !!}</div>
                         @endif
 
                         <div class="chat-meta">
@@ -242,48 +413,190 @@
                 @endforelse
             </div>
 
-            {{-- FORMULARIO DE RESPUESTA --}}
+            {{-- FORMULARIO DE RESPUESTA (CON TODOS LOS IDs) --}}
             @if($numeroSeleccionado && $instance)
-                <form action="{{ route('responses.reply') }}" method="POST" class="chat-input" enctype="multipart/form-data">
+                <form action="{{ route('responses.reply') }}" method="POST" class="chat-input" id="reply-form" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="phone" value="{{ $numeroSeleccionado }}">
                     <input type="hidden" name="whatsapp_instance_id" value="{{ $instance->id }}">
 
-                    <button type="button" class="icon-button" title="Emojis"><i class="far fa-smile"></i></button>
+                    <emoji-picker id="emoji-picker"></emoji-picker>
+                    
+                    <button type="button" class="icon-button" id="emoji-button" title="Emojis"><i class="far fa-smile"></i></button>
 
                     <label for="media_file" class="icon-button" title="Adjuntar archivo">
                         <i class="fas fa-paperclip"></i>
-                        <input type="file" name="media_file" id="media_file" accept="image/*,audio/*" style="display: none;">
+                        <input type="file" name="media_file" id="media_file" 
+                            accept="image/*,audio/*,video/*,.pdf" 
+                            style="display: none;" 
+                            onchange="showFileName(this)">
                     </label>
-
-                    <textarea name="message" placeholder="Escribe un mensaje..." required></textarea>
-
-                    <button type="submit" title="Enviar mensaje">
+                    <span id="file-name-preview"></span>
+                    
+                    <textarea name="message" id="message-input" placeholder="Escribe un mensaje..."></textarea>
+                    
+                    <button type="submit" class="icon-button send-button" id="send-button" title="Enviar mensaje" style="display: none;">
                         <i class="fas fa-paper-plane"></i>
+                    </button>
+                    
+                    <button type="button" class="icon-button mic-button" id="mic-button" title="Grabar audio">
+                        <i class="fas fa-microphone"></i>
                     </button>
                 </form>
             @endif
         </div>
     </div>
 </div>
+@endsection {{-- <-- FIN DE @section('content') --}}
 
+
+{{-- ======================================================================= --}}
+{{-- 3. SECCIÓN DE SCRIPTS (JAVASCRIPT)                                    --}}
+{{-- ======================================================================= --}}
 @push('scripts')
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+
 <script>
+    // Variables globales para la grabación de audio
+    let mediaRecorder;
+    let recordedChunks = [];
+    let isRecording = false;
+
+    // TODO EL CÓDIGO AHORA VA DENTRO DE ESTE BLOQUE
     document.addEventListener("DOMContentLoaded", function() {
+        
+        // 1. Scroll automático al último mensaje
         const thread = document.getElementById('chat-thread');
         if (thread) {
-            thread.scrollTo({ top: thread.scrollHeight, behavior: 'smooth' });
+            thread.scrollTo({ top: thread.scrollHeight, behavior: 'auto' });
         }
 
-        const textarea = document.querySelector('.chat-input textarea');
-        if (textarea) {
-            textarea.addEventListener('input', function() {
+        // --- Declaración de todos los elementos ---
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const micButton = document.getElementById('mic-button');
+        const replyForm = document.getElementById('reply-form');
+        const emojiPicker = document.getElementById('emoji-picker');
+        const emojiButton = document.getElementById('emoji-button');
+
+        // 2. Auto-resize del textarea
+        if (messageInput) {
+            messageInput.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
         }
-    });
+        
+        // --- LÓGICA DEL BOTÓN MIC/ENVIAR ---
+        if (messageInput && sendButton && micButton) {
+            messageInput.addEventListener('input', function() {
+                const text = this.value.trim();
+                if (text.length > 0) {
+                    sendButton.style.display = 'flex';
+                    micButton.style.display = 'none';
+                } else {
+                    sendButton.style.display = 'none';
+                    micButton.style.display = 'flex';
+                }
+            });
+        } else {
+            if (document.getElementById('reply-form')) {
+                 console.log("Formulario de respuesta cargado, pero no se encontraron botones (normal si no hay chat seleccionado).");
+            }
+        }
+
+        // --- LÓGICA DEL PICKER DE EMOJIS ---
+        if (emojiButton && emojiPicker && messageInput) {
+            emojiButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                emojiPicker.classList.toggle('visible');
+            });
+
+            emojiPicker.addEventListener('emoji-click', event => {
+                messageInput.value += event.detail.emoji.unicode;
+                // Dispara el evento 'input' manualmente para que cambie el botón
+                messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+            
+            // Ocultar si se hace click fuera
+            document.body.addEventListener('click', (e) => {
+                if (emojiPicker.classList.contains('visible') && e.target.id !== 'emoji-button' && !emojiPicker.contains(e.target)) {
+                    emojiPicker.classList.remove('visible');
+                }
+            });
+        }
+
+        // --- LÓGICA PARA GRABAR AUDIO ---
+        if (micButton && replyForm && messageInput) {
+            
+            const startRecording = async () => {
+                try {
+                    // 1. Pedir permiso
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    
+                    // 2. Iniciar MediaRecorder
+                    mediaRecorder = new MediaRecorder(stream);
+                    recordedChunks = [];
+                    
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        if (event.data.size > 0) recordedChunks.push(event.data);
+                    });
+
+                    mediaRecorder.addEventListener('stop', () => {
+                        // 4. Convertir a archivo
+                        const audioBlob = new Blob(recordedChunks, { type: 'audio/ogg; codecs=opus' });
+                        const audioFile = new File([audioBlob], `audio_grabado_${Date.now()}.ogg`, {
+                            type: 'audio/ogg; codecs=opus',
+                        });
+
+                        // 5. Adjuntar al input <input type="file">
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(audioFile);
+                        
+                        const fileInput = document.getElementById('media_file');
+                        fileInput.files = dataTransfer.files;
+
+                        // 6. Enviar formulario
+                        replyForm.submit();
+                    });
+
+                    // 3. Empezar
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micButton.classList.add('is-recording'); // Poner rojo
+                } catch (err) {
+                    console.error("Error al grabar audio: ", err);
+                    alert('No se pudo iniciar la grabación. ¿Diste permiso para usar el micrófono? (Revisa el candado 🔒 en la URL)');
+                }
+            };
+
+            const stopRecording = () => {
+                if (mediaRecorder && isRecording) {
+                    mediaRecorder.stop();
+                    isRecording = false;
+                    micButton.classList.remove('is-recording');
+                }
+            };
+
+            // Simular "mantener presionado"
+            micButton.addEventListener('mousedown', startRecording);
+            micButton.addEventListener('mouseup', stopRecording);
+            micButton.addEventListener('mouseleave', () => { // Si saca el mouse
+                if (isRecording) stopRecording(); 
+            });
+        }
+    }); // <-- FIN DEL DOMContentLoaded
+
+    // Esta función va afuera porque es llamada por el HTML (onchange)
+    function showFileName(input) {
+        const preview = document.getElementById('file-name-preview');
+        if (input.files && input.files[0]) {
+            preview.textContent = input.files[0].name;
+            preview.style.display = 'inline-block';
+        } else {
+            preview.textContent = '';
+            preview.style.display = 'none';
+        }
+    }
 </script>
 @endpush
-
-@endsection

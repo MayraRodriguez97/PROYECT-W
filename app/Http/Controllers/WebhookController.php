@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -13,104 +14,116 @@ class WebhookController extends Controller
 {
     public function handle(Request $request)
     {
-        Log::alert('📩 WEBHOOK HIT: La solicitud llegó a Laravel.');
+        Log::alert('WEBHOOK HIT: La solicitud llegó a Laravel.');
+        $data = $request->all();
+        // Esta vez, logueamos el payload real sin modificarlo
+        Log::debug(' Payload recibido (RAW)', $data); 
 
         try {
-            $payload = $request->getContent();
-            $signature = $request->header('X-WAAPI-HMAC');
-            $secret = config('services.waapi.webhook_secret');
-            $expected = hash_hmac('sha256', $payload, $secret);
+            // ------------------------------------------------------------------
+            // 1. BUSCAR LA INSTANCIA (¡¡CORREGIDO!!)
+            // ------------------------------------------------------------------
 
-            // 🔐 Validación HMAC (opcional en pruebas)
-            // if (!is_string($signature) || !hash_equals($expected, $signature)) {
-            //     Log::error('Firma HMAC inválida', ['received' => $signature, 'expected' => $expected]);
-            //     return response()->json(['status' => 'invalid_signature'], 403);
-            // }
+            // 'sessionId' está en el NIVEL RAÍZ del payload ($data)
+            $sessionApiKey = $data['sessionId'] ?? null;
 
-            $data = $request->all();
-            Log::debug('📦 Payload recibido', ['data' => $data]);
-
-            $event = strtolower($data['event'] ?? $data['type'] ?? '');
-            Log::info('🔍 Evento recibido:', ['event' => $event]);
-
-            $waapiInstanceId = $data['instance_id']
-                ?? $data['instanceId']
-                ?? $data['data']['instance_id']
-                ?? $data['data']['instanceId']
-                ?? null;
-
-            if (!$waapiInstanceId) {
-                Log::warning('⚠️ Webhook ignorado: Falta el instance_id.', $data);
-                return response()->json(['status' => 'ignored: missing instance_id'], 200);
+            if (!$sessionApiKey) {
+                // Si esto falla, el payload es totalmente inesperado
+                Log::warning(' Webhook ignorado: No se encontró "sessionId" en la raíz del payload.', $data);
+                return response()->json(['status' => 'ignored: missing root sessionId'], 200);
             }
 
-            $instance = WhatsappInstance::where('instance_id', $waapiInstanceId)->first();
+            // ¡Buscamos la instancia por su 'api_key' (que es el sessionId)!
+            $instance = WhatsappInstance::where('api_key', $sessionApiKey)->first();
+            
             if (!$instance) {
-                Log::error('❌ Instancia no encontrada para el ID: ' . $waapiInstanceId);
+                Log::error('Instancia no encontrada para la API Key (sessionId): ' . $sessionApiKey);
                 return response()->json(['status' => 'instance_not_found'], 200);
             }
 
-            if ($event === 'message') {
-                $msg = $data['data']['message'] ?? null;
-                Log::info('🧪 Mensaje recibido:', ['msg' => $msg]);
+            // ------------------------------------------------------------------
+            // 2. PROCESAR EL MENSAJE (¡¡CORREGIDO!!)
+            // ------------------------------------------------------------------
 
-                if (!is_array($msg)) {
-                    Log::info('⚠️ Estructura de mensaje no válida, se ignora.');
-                    return response()->json(['status' => 'ignored_invalid_structure'], 200);
+            // 'event' también está en el NIVEL RAÍZ
+            $event = strtolower($data['event'] ?? 'message');
+            Log::info('🔍 Evento recibido:', ['event' => $event]);
+
+            if (str_contains($event, 'messages.received')) {
+                
+                // Pero el mensaje está en el NIVEL ANIDADO: $data['data']['messages']
+                $msgData = $data['data']['messages'] ?? null; 
+                
+                if (!$msgData) {
+                    Log::error(' Estructura de mensaje desconocida, falta "data.data.messages".', $data);
+                    return response()->json(['status' => 'unknown_structure'], 200);
                 }
 
-                if ($msg['fromMe'] ?? true) {
-                    Log::info('📤 Mensaje saliente recibido, se ignora.');
-                    return response()->json(['status' => 'ignored_outbound'], 200);
+                // Ignoramos los mensajes que nosotros mismos enviamos (ecos)
+                if ($msgData['key']['fromMe'] ?? false) {
+                    Log::info('📤 Mensaje saliente (eco de webhook), se ignora.');
+                    return response()->json(['status' => 'ignored_outbound_echo'], 200);
                 }
 
-                $from = $msg['from'] ?? null;
-                $to = $msg['to'] ?? null;
-                $content = $msg['body'] ?? null;
-                $timestamp = $msg['timestamp'] ?? $msg['t'] ?? time();
+                // Ajustamos los nombres de los campos a la estructura REAL del log
+                $fromJid = $msgData['key']['remoteJid'] ?? null; 
+                $content = $msgData['message']['conversation'] ?? $msgData['messageBody'] ?? null;
+                $timestamp = $msgData['messageTimestamp'] ?? time();
 
-                if ($from && $to && $content && trim($content) !== '') {
-                    $cleanClientPhone = preg_replace('/[^0-9]/', '', $from);
+                
+                if ($fromJid && $content && trim($content) !== '') {
+                    
+                    // Limpiamos el JID para obtener el número de 8 dígitos
+                    $rawPhone = preg_replace('/[^0-9]/', '', $fromJid); 
+                    $cleanClientPhone = $rawPhone;
+                    if (str_starts_with($rawPhone, '503')) {
+                        $cleanClientPhone = substr($rawPhone, 3); // Queda "64436190"
+                    }
 
+                    // 1. Encontrar o crear al cliente
                     $client = ClientModel::firstOrCreate(
                         ['phone' => $cleanClientPhone],
-                        ['name' => 'Cliente Chat', 'dui' => '000000000', 'date' => Carbon::now()->toDateString()]
+                        ['name' => $msgData['pushName'] ?? 'Cliente Chat', 'dui' => '000000000', 'date' => Carbon::now()->toDateString()]
                     );
 
+                    // 2. Asignar el mensaje a un usuario
                     $user = $client->users()->first()
                         ?? $instance->users()->first()
                         ?? User::role('admin')->first();
-
                     $userId = $user?->id;
 
+                    // 3. Vincular cliente y usuario
                     if ($user && !$client->users->contains($user)) {
                         $client->users()->attach($user->id);
                     }
 
+                    // 4. Guardar el mensaje en la base de datos
                     ClientMessage::create([
                         'client_id' => $client->id,
                         'user_id' => $userId,
                         'whatsapp_instance_id' => $instance->id,
-                        'from_number' => $from,
-                        'to_number' => $to,
+                        'from_number' => $fromJid, // Guardamos el JID completo
+                        'to_number' => $instance->phone, 
                         'message' => $content,
                         'direction' => 'inbound',
+                        'is_read' => false,
                         'received_at' => Carbon::createFromTimestamp($timestamp),
                     ]);
 
-                    Log::info('✅ Mensaje entrante guardado para cliente: ' . $client->phone);
+                    Log::info(' MENSAJE ENTRANTE GUARDADO! Cliente: ' . $cleanClientPhone);
+                
                 } else {
-                    Log::info('⚠️ Mensaje incompleto o vacío, no se guarda.');
+                    Log::info(' Mensaje incompleto o vacío, no se guarda.', $msgData);
                     return response()->json(['status' => 'ignored_empty'], 200);
                 }
             } else {
-                Log::info('ℹ️ Evento no procesado: ' . $event);
+                Log::info(' Evento no procesado: ' . $event);
             }
 
             return response()->json(['status' => 'ok'], 200);
 
         } catch (\Exception $e) {
-            Log::error('🔥 Error FATAL en webhook: ' . $e->getMessage(), [
+            Log::error('Error FATAL en webhook: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all()
             ]);
