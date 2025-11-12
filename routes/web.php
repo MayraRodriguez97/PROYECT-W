@@ -9,7 +9,8 @@ use App\Http\Controllers\UserController;
 
 
 
-
+// Rutas públicas de autenticación
+require __DIR__.'/auth.php';
 
 // Grupo de rutas protegidas (requiere login)
 Route::middleware('auth')->group(function () {
@@ -23,8 +24,7 @@ Route::post('/responses/reply', [MessageController::class, 'reply'])->name('resp
 //Route::post('/webhooks/waapi/{token}', [WebhookController::class, 'handle']);
 
 
-// Rutas públicas de autenticación
-require __DIR__.'/auth.php';
+
 
 // Mostrar la vista de respuestas
 Route::get('/responses', [MessageController::class, 'showResponses'])
