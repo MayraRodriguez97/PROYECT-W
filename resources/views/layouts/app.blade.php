@@ -11,13 +11,13 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
-    @stack('styles') 
+
+    @stack('styles')
 </head>
 <body class="font-sans antialiased">
-    
+
     {{-- Contenedor estándar para vistas normales --}}
-    <div class="min-h-screen bg-gray-100 dark:bg-gray-900"> 
+    <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
         @include('layouts.navigation')
 
         @isset($header)
@@ -28,11 +28,11 @@
             </header>
         @endisset
 
-        <main> 
+        <main>
             @yield('content')
         </main>
     </div>
-    
+
     @stack('scripts')
 </body>
 </html>

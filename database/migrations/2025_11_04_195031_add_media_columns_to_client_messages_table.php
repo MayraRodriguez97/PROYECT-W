@@ -12,8 +12,8 @@ return new class extends Migration
    public function up(): void
 {
     Schema::table('client_messages', function (Blueprint $table) {
-        $table->string('media_url')->nullable()->after('message');
-        $table->string('media_type')->nullable()->after('media_url');
+//        $table->string('media_url')->nullable()->after('message');
+//        $table->string('media_type')->nullable()->after('media_url');
     });
 }
 
