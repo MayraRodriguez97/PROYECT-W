@@ -120,7 +120,7 @@
     justify-content: space-between;
 }
 .chat-header {
-    background-color: #ededed;
+    background-color: #ffffffff;
     justify-content: flex-start;
     gap: 12px;
 }
@@ -132,7 +132,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: url('https://i.imgur.com/gK37Q9h.png') repeat;
+    background-color: #E0F2E9;
     background-size: cover;
 }
 
