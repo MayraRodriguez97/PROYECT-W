@@ -207,14 +207,15 @@
     </a>
 
     <div class="collapse ps-2" id="adminSubmenu">
-{{--        @can('manage-users')--}}
+   @can('manage-users')
         <a href="{{route('users.index')}}" class="d-block px-4 py-2 text-white-50">Usuarios</a>
-{{--        @endcan--}}
-{{--        @can('rol-write')--}}
+      @endcan
+       @can('rol-write')
         <a href="{{ route('roles.index') }}" class="d-block px-4 py-2 text-white-50">Roles</a>
-{{--        @endcan--}}
+       @endcan
+       @can('permission-write')
         <a href="{{ route('permission.index') }}" class="d-block px-4 py-2 text-white-50">Permisos</a>
-
+        @endcan
     </div>
     <a class="d-flex justify-content-between align-items-center px-3 py-2 text-white"
        data-bs-toggle="collapse"
