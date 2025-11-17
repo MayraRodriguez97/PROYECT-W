@@ -156,7 +156,7 @@ class MessageController extends Controller
         $senderUserId = Auth::id();
         
         // Corrección para 'super admin'
-        $isAdmin = Auth::user()->hasRole(['admin', 'super admin']);
+        $isAdmin = Auth::user()->isSuperAdmin() || Auth::user()->hasRole('admin');
 
         // REGLA: Solo los administradores pueden enviar mensajes masivos
         if (!$isAdmin) {
@@ -294,7 +294,7 @@ class MessageController extends Controller
         $clientModel->users()->syncWithoutDetaching([$senderUserId]);
 
         // --- ¡¡CORRECCIÓN DE SUPER ADMIN (2/3)!! ---
-        if (!$user->hasRole(['admin', 'super admin']) && !$clientModel->users->contains($user)) {
+        if (!$user->isSuperAdmin() && !$user->hasRole('admin') && !$clientModel->users->contains($user)) {
             return back()->withErrors(['message' => 'No tienes permiso para responder a este cliente.']);
         }
 
@@ -396,7 +396,7 @@ class MessageController extends Controller
         $user = Auth::user();
         
         // --- ¡¡CORRECCIÓN DE SUPER ADMIN (3/3)!! ---
-        $isAdmin = $user->hasRole(['admin', 'super admin']);
+        $isAdmin = $user->isSuperAdmin() || $user->hasRole('admin');
         
         $numeroSeleccionado = $request->get('phone');
         $numeroLimpio = $numeroSeleccionado ? preg_replace('/[^0-9]/', '', $numeroSeleccionado) : null;

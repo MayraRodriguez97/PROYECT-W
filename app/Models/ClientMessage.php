@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use App\Models\Scopes\InstanceScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,7 +32,10 @@ class ClientMessage extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-
+    public function whatsappInstance()
+    {
+        return $this->belongsTo(WhatsappInstance::class, 'whatsapp_instance_id');
+    }
     // Accessor para obtener el número limpio
     public function getNumeroLimpioAttribute()
     {
