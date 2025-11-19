@@ -102,7 +102,8 @@ class WebhookController extends Controller
                         'client_id' => $client->id,
                         'user_id' => $userId,
                         'whatsapp_instance_id' => $instance->id,
-                        'from_number' => $fromJid, // Guardamos el JID completo
+                        'from_number' => $cleanClientPhone,
+                        //'from_number' => $fromJid, // Guardamos el JID completo
                         'to_number' => $instance->phone, 
                         'message' => $content,
                         'direction' => 'inbound',
