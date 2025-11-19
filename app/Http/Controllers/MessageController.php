@@ -246,11 +246,11 @@ class MessageController extends Controller
                     Log::error("Fallo de API: Error al intentar enviar al número $numeroDebug. Detalles: " . $errorDetails);
 
                     $totalFailed++;
-                    continue; 
+                   
                 }
 
                 // --- ¡¡AQUÍ ESTÁ LA PAUSA!! ---
-                sleep(5); // Pausa de 5 segundos para cumplir con la API
+                sleep(6); // Pausa de 6 segundos para cumplir con la API
 
             } // Fin foreach $numeros
         } // Fin foreach $datosPorCategoria
