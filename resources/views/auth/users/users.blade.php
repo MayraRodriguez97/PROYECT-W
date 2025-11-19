@@ -35,6 +35,7 @@
                         data-name="{{ $user->name }}"
                         data-email="{{ $user->email }}"
                         data-roles="{{ $user->roles->pluck('name')->join(',') }}"
+                        data-instances="{{ $user->whatsappInstances->pluck('id')->join(',') }}"
                         title="Editar usuario"
                     >
                         <i class="bi bi-pencil-square text-primary h4"></i>
@@ -89,6 +90,29 @@
                                             <label class="form-check-label" for="create_role_{{ $role->id }}">{{ $role->name }}</label>
                                         </div>
                                     </div>
+                        <div class="col-12 mt-3">
+                                    <label class="form-label fw-bold">Asignar Instancia (Área)</label>
+                                    <div class="card p-2" style="background: #f8f9fa;">
+                                        <div class="row">
+                                            @if(isset($instances))
+                                                @foreach($instances as $instance)
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" 
+                                                                type="checkbox" 
+                                                                value="{{ $instance->id }}" 
+                                                                name="instances[]" 
+                                                                id="create_instance_{{ $instance->id }}">
+                                                            <label class="form-check-label" for="create_instance_{{ $instance->id }}">
+                                                                {{ $instance->name }} <small class="text-muted">({{ $instance->area }})</small>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
                                 @endforeach
                             </div>
                         </div>
@@ -140,6 +164,30 @@
                                     <label class="form-check-label" for="edit_role_{{ $role->id }}">{{ $role->name }}</label>
                                 </div>
                             @endforeach
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Asignar Instancia (Área)</label>
+                                <div class="card p-2" style="background: #f8f9fa;">
+                                    <div class="row">
+                                        @if(isset($instances))
+                                            @foreach($instances as $instance)
+                                                <div class="col-6">
+                                                    <div class="form-check">
+                                                        {{-- Nota la clase 'edit-instance-checkbox' para el JS --}}
+                                                        <input class="form-check-input edit-instance-checkbox" 
+                                                            type="checkbox" 
+                                                            value="{{ $instance->id }}" 
+                                                            name="instances[]" 
+                                                            id="edit_instance_{{ $instance->id }}">
+                                                        <label class="form-check-label" for="edit_instance_{{ $instance->id }}">
+                                                            {{ $instance->name }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -186,6 +234,7 @@
             var name = button.data('name');
             var email = button.data('email');
             var roles = button.data('roles') ? button.data('roles').split(',') : [];
+            var instances = button.data('instances') ? String(button.data('instances')).split(',') : [];
 
             var form = $('#formEditUser');
             // Ajustamos la acción del formulario con la ruta correcta:
@@ -206,6 +255,10 @@
                     return $(this).val() === roleName;
                 }).prop('checked', true);
             });
+            $('.edit-instance-checkbox').prop('checked', false);
+            instances.forEach(function(instId) {
+        $('#edit_instance_' + instId).prop('checked', true);
+    });
         });
     });
 

@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use App\Models\WhatsappInstance;
+
 
 class UserController extends Controller
 {
@@ -15,7 +17,8 @@ class UserController extends Controller
     {
         $users = User::with('roles')->paginate(10);
         $roles = Role::all();
-        return view('auth.users.users', compact('users', 'roles'));
+        $instances = WhatsappInstance::all();
+        return view('auth.users.users', compact('users', 'roles', 'instances'));
     }
 
     // Guardar usuario nuevo
@@ -27,6 +30,8 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
             'roles' => 'required|array',
+            'instances' => 'nullable|array', // <--- 5. NUEVO: Validar que sea un array
+            'instances.*' => 'exists:whatsapp_instances,id',
         ]);
 
         $user = User::create([
@@ -36,7 +41,10 @@ class UserController extends Controller
         ]);
 
         $user->syncRoles($request->roles);
-
+       if ($request->has('instances')) {
+            // Esto guarda la relación en la tabla 'instance_user' automáticamente
+            $user->whatsappInstances()->sync($request->instances);
+        }
         DB::commit();
         return redirect()->route('users.index')->with('success', 'Usuario creado correctamente.');
     }
@@ -49,6 +57,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:6|confirmed',
             'roles' => 'required|array',
+            'instances.*' => 'exists:whatsapp_instances,id',
         ]);
 
         $user->name = $request->name;
@@ -61,7 +70,8 @@ class UserController extends Controller
         $user->save();
 
         $user->syncRoles($request->roles);
-
+        $user->whatsappInstances()->sync($request->input('instances', []));
+        // 👆👆👆 FIN DEL BLOQUE NUEVO 👆👆👆
         return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente.');
     }
 

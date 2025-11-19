@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class ClientMessage extends Model
 {
     use HasFactory;
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new InstanceScope);
+    }
 
     protected $fillable = [
         'from_number',

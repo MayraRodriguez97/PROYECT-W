@@ -435,12 +435,12 @@ class MessageController extends Controller
 
         // Cargar todos los mensajes (para la lista de la izquierda)
         $allUserMessages = ClientMessage::query()
-            ->when(!$isAdmin, function ($query) use ($user) {
+           // ->when(!$isAdmin, function ($query) use ($user) {
                 // Si NO es Admin, solo muestra los mensajes
                 // asignados a él O los que no tienen dueño
-                $query->where('user_id', $user->id)
-                        ->orWhereNull('user_id');
-            })
+               // $query->where('user_id', $user->id)
+                 //       ->orWhereNull('user_id');
+            //})
             // Si ES Admin, el 'when' es falso y no se aplica
             // ningún filtro, por lo que trae TODO.
             ->orderBy('received_at', 'desc')
