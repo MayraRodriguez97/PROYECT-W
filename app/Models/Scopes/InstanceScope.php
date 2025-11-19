@@ -32,15 +32,25 @@ class InstanceScope implements Scope
                             ->pluck('whatsapp_instances.id')
                             ->toArray();
 
+
+                            // 2. Admins y Encargados ven TODO lo de sus instancias
+        $instanceIds = $user->whatsappInstances()
+                            ->pluck('whatsapp_instances.id')
+                            ->toArray();
+
+        // 👇 ESTA ES LA LÍNEA MÁGICA QUE ARREGLA LA VISIBILIDAD
+        // Permite ver mensajes propios, ajenos y de clientes, siempre que sean de la instancia.
+        $builder->whereIn('whatsapp_instance_id', $instanceIds);
+    
         // =========================================================
         // 👔 NIVEL 2: ADMIN (El Jefe de Área)
         // =========================================================
         // Si tiene el rol 'admin', ve TODO lo de sus instancias.
-        if ($user->hasRole('admin')) {
+       // if ($user->hasRole('admin')) {
             // Solo filtramos por Instancia (VTO, Mora, etc.)
-            $builder->whereIn('whatsapp_instance_id', $instanceIds);
-            return; // Termina aquí, no filtra por usuario.
-        }
+         //   $builder->whereIn('whatsapp_instance_id', $instanceIds);
+           // return; // Termina aquí, no filtra por usuario.
+        //}
 
         // =========================================================
         // 👷 NIVEL 3: ENCARGADO (El Agente)
@@ -48,14 +58,14 @@ class InstanceScope implements Scope
         // Si llegamos aquí, es un 'encargado' (o cualquier otro rol menor).
         // Aplicamos DOBLE FILTRO:
         
-        $builder->whereIn('whatsapp_instance_id', $instanceIds) // 1. Filtro de Instancia
-                ->where(function ($query) use ($user) {
+        //$builder->whereIn('whatsapp_instance_id', $instanceIds) // 1. Filtro de Instancia
+          //      ->where(function ($query) use ($user) {
                     // 2. Filtro de Propiedad:
                     // Muestra el mensaje SOLO SI:
                     // a) Él lo envió/recibió (user_id == su ID)
                     // b) O el mensaje no tiene dueño (user_id == NULL) para poder tomarlo
-                    $query->where('user_id', $user->id)
-                          ->orWhereNull('user_id');
-                });
+            //        $query->where('user_id', $user->id)
+              //            ->orWhereNull('user_id');
+                //});
     }
 }

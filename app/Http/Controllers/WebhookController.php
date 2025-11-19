@@ -74,11 +74,33 @@ class WebhookController extends Controller
                 if ($fromJid && $content && trim($content) !== '') {
                     
                     // Limpiamos el JID para obtener el número de 8 dígitos
-                    $rawPhone = preg_replace('/[^0-9]/', '', $fromJid); 
-                    $cleanClientPhone = $rawPhone;
-                    if (str_starts_with($rawPhone, '503')) {
-                        $cleanClientPhone = substr($rawPhone, 3); // Queda "64436190"
-                    }
+                    // 1. Limpieza básica
+$rawPhone = preg_replace('/[^0-9]/', '', $fromJid); 
+
+// 2. Si el número es GIGANTE (más de 12 dígitos) y no empieza con 503, 
+// es probable que sea un ID interno (LID) y no un teléfono.
+if (strlen($rawPhone) > 12 && !str_starts_with($rawPhone, '503')) {
+    
+    // INTENTO A: Buscar el teléfono real en otra parte del paquete de datos
+    // A veces viene en 'participant' o en datos del contacto
+    $realUser = $msgData['key']['participant'] ?? null;
+    if ($realUser) {
+        $rawPhone = preg_replace('/[^0-9]/', '', $realUser);
+    }
+}
+
+// 3. Aplicar lógica de El Salvador (8 dígitos)
+$cleanClientPhone = $rawPhone;
+if (str_starts_with($rawPhone, '503') && strlen($rawPhone) >= 11) {
+    $cleanClientPhone = substr($rawPhone, 3); // Quitamos el 503
+}
+// Seguridad extra: si sigue siendo gigante, cortamos los últimos 8 (esperando que coincida)
+elseif (strlen($rawPhone) > 8) {
+     // A veces el LID no contiene el número, pero si lo contiene, esto ayuda.
+     // Si el LID es totalmente diferente, se guardará como LID y no hay mucho que hacer
+     // sin una API de "Contact Info".
+     // $cleanClientPhone = substr($rawPhone, -8); <--- Opcional
+}
 
                     // 1. Encontrar o crear al cliente
                     $client = ClientModel::firstOrCreate(
