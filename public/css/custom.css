@@ -1,0 +1,272 @@
+/* === Dark Mode === */
+body.dark-mode {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+}
+
+/* Navbar */
+.dark-mode .topbar {
+    background-color: #2a2a2a !important;
+}
+
+/* Sidebar */
+.dark-mode #accordionSidebar {
+    background-color: #232323 !important;
+}
+
+.dark-mode .sidebar .nav-item .nav-link {
+    color: #ddd !important;
+}
+
+.dark-mode .sidebar .nav-item .nav-link:hover {
+    background-color: #333 !important;
+}
+
+/* Tarjetas */
+.dark-mode .card {
+    background-color: #2e2e2e;
+    border-color: #444;
+    color: #eee;
+}
+
+/* Dropdown */
+.dark-mode .dropdown-menu {
+    background-color: #2d2d2d;
+    color: #fff;
+}
+body.dark-mode,
+#content-wrapper.dark-mode,
+#content.dark-mode,
+.container-fluid.dark-mode {
+    background-color: #1f1f1f !important;
+}
+
+/* Sidebar oscuro (si no quieres tocarlo, puedes quitar esto) */
+.sidebar.dark-mode {
+    background-color: #1e1e2d !important;
+}
+
+/* Tarjetas oscuras */
+body.dark-mode .card {
+    background-color: #2b2b2b !important;
+    color: #e4e4e4 !important;
+    border: 1px solid #3a3a3a;
+}
+
+body.dark-mode .card-body {
+    background-color: #2b2b2b !important;
+    color: #e4e4e4 !important;
+}
+
+/* Texto general */
+body.dark-mode,
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+    color: #e4e4e4 !important;
+}
+/* Submenú SIN fondo en modo oscuro */
+body.dark-mode .collapse-inner {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+.collapse-inner {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Opciones del submenú */
+body.dark-mode .collapse-item {
+    background: transparent !important;
+    color: #e4e4e4 !important;
+    padding-left: 0 !important;
+}
+/* Colocar el mismo estilo para ambos modos */
+.collapse-item {
+    padding-left: 0 !important;
+}
+
+
+/* Hover más limpio */
+body.dark-mode .collapse-item:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #fff !important;
+}
+
+/* Icons */
+body.dark-mode .collapse-item i {
+    color: #cfcfcf !important;
+}
+
+/* Divider limpio */
+body.dark-mode .collapse-divider {
+    margin: 0.5rem 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+
+/* Título del menú superior */
+body.dark-mode .nav-link span {
+    color: #eaeaea !important;
+}
+
+body.dark-mode .nav-link i {
+    color: #d0d0d0 !important;
+}
+body.dark-mode .nav-link:hover {
+    background-color: #3c3c3c !important;
+}
+body.dark-mode #accordionSidebar {
+    background-color: #1e1e2d !important;
+}
+
+body.dark-mode #accordionSidebar .sidebar-brand-text {
+    color: #ffffff !important;
+}
+
+/* ================================
+   DATATABLE DARK MODE
+=================================*/
+body.dark-mode table.dataTable {
+    background-color: #1e1e1e !important;
+    color: #e4e4e4 !important;
+}
+
+body.dark-mode table.dataTable thead th {
+    background-color: #2a2a2a !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid #444 !important;
+}
+
+body.dark-mode table.dataTable tbody td {
+    background-color: #1e1e1e !important;
+    color: #e4e4e4 !important;
+    border-color: #333 !important;
+}
+
+/* Filas alternas */
+body.dark-mode table.dataTable.stripe tbody tr:nth-child(odd),
+body.dark-mode table.dataTable tbody tr:nth-child(odd) {
+    background-color: #242424 !important;
+}
+
+/* Hover */
+body.dark-mode table.dataTable tbody tr:hover {
+    background-color: #333 !important;
+}
+
+/* Paginación */
+body.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: #e4e4e4 !important;
+    border: 1px solid #444 !important;
+    background: #2a2a2a !important;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #4e73df !important;
+    color: #fff !important;
+}
+
+/* Buscador */
+body.dark-mode .dataTables_wrapper .dataTables_filter input {
+    background: #222 !important;
+    border: 1px solid #555 !important;
+    color: #fff !important;
+}
+
+/* Select del lengthMenu */
+body.dark-mode .dataTables_wrapper .dataTables_length select {
+    background: #222 !important;
+    border: 1px solid #555 !important;
+    color: #fff !important;
+}
+
+
+/* === DataTable Dark Mode === */
+body.dark-mode table.dataTable {
+    color: #e0e0e0;
+    background: #1f1f1f;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_length select,
+body.dark-mode .dataTables_wrapper .dataTables_filter input {
+    background: #2b2b2b;
+    color: #e0e0e0;
+    border: 1px solid #444;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: #e0e0e0 !important;
+    background: #2b2b2b !important;
+    border: 1px solid #444 !important;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #3b3b3b !important;
+    color: #fff !important;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #4e73df !important;
+    border-color: #4e73df !important;
+    color: #fff !important;
+}
+
+body.dark-mode table.dataTable tbody tr {
+    background: #262626 !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode table.dataTable thead {
+    background: #2e2e2e !important;
+    color: #fff !important;
+}
+
+body.dark-mode table.dataTable tbody tr:hover {
+    background: #333 !important;
+}
+
+/* Modal fondo oscuro */
+.dark-mode .modal-content {
+    background-color: #2b2b2b !important;
+    color: #ffffff !important;
+    border: 1px solid #444 !important;
+}
+
+/* Header */
+.dark-mode .modal-header {
+    border-bottom: 1px solid #444 !important;
+}
+
+/* Footer */
+.dark-mode .modal-footer {
+    border-top: 1px solid #444 !important;
+}
+
+/* Inputs dentro del modal */
+.dark-mode .modal-content input,
+.dark-mode .modal-content select,
+.dark-mode .modal-content textarea {
+    background-color: #1e1e1e !important;
+    border: 1px solid #444 !important;
+    color: #fff !important;
+}
+
+/* Placeholder */
+.dark-mode .modal-content input::placeholder,
+.dark-mode .modal-content textarea::placeholder {
+    color: #cfcfcf !important;
+}
+
+/* Botón cerrar (X) */
+.dark-mode .btn-close {
+    filter: invert(1);
+}

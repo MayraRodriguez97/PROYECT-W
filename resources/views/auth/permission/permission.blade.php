@@ -1,48 +1,54 @@
-@extends('template')
+@extends('template-v2')
 
 @section('title', 'Permisos')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Permisos</h1>
-        <button type="button" class="btn btn-primary add-class">Nuevo Permiso</button>
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1>Permisos</h1>
+                <button type="button" class="btn btn-primary add-class">Nuevo Permiso</button>
+            </div>
+
+            <div class="">
+                <table id="table" class="table table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th style="width: 200px;">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($permissions as $permission)
+                        <tr data-id="{{ $permission->id }}">
+                            <td>{{ $permission->name }}</td>
+                            <td>
+                                <button type="button"
+                                        class="edit-class btn btn-link p-0"
+                                        title="Editar Permiso"
+                                        data-name="{{ $permission->name }}"
+                                        data-id="{{ $permission->id }}">
+                                    <i class="bi bi-pencil-square text-primary h4"></i>
+                                </button>
+
+                                <button type="button" data-id="{{ $permission->id }}" class="delete-class btn btn-link p-0 ms-2" title="Eliminar Permiso">
+                                    <i class="bi bi-trash text-danger h4"></i>
+                                </button>
+
+                                <button type="button"
+                                        class="add-role btn btn-link p-0 ms-2"
+                                        data-permission-id="{{ $permission->id }}"
+                                        title="Agregar Roles">
+                                    <i class="bi bi-plus-circle h4 text-success"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-
-    <table id="table" class="table table-striped table-bordered align-middle">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th style="width: 200px;">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($permissions as $permission)
-                <tr data-id="{{ $permission->id }}">
-                    <td>{{ $permission->name }}</td>
-                    <td>
-                        <button type="button"
-                            class="edit-class btn btn-link p-0"
-                            title="Editar Permiso"
-                            data-name="{{ $permission->name }}"
-                            data-id="{{ $permission->id }}">
-                            <i class="bi bi-pencil-square text-primary h4"></i>
-                        </button>
-
-                        <button type="button" data-id="{{ $permission->id }}" class="delete-class btn btn-link p-0 ms-2" title="Eliminar Permiso">
-                            <i class="bi bi-trash text-danger h4"></i>
-                        </button>
-
-                        <button type="button"
-                            class="add-role btn btn-link p-0 ms-2"
-                            data-permission-id="{{ $permission->id }}"
-                            title="Agregar Roles">
-                            <i class="bi bi-plus-circle h4 text-success"></i>
-                        </button>
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
 
     <!-- Modal Crear/Editar Permiso -->
     <div class="modal fade" id="modalCreatePermission" tabindex="-1" aria-labelledby="modalCreatePermissionLabel" aria-hidden="true">
@@ -101,8 +107,6 @@
 @endsection
 
 @section('scripts')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
 $(document).ready(function() {

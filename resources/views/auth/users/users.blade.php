@@ -1,4 +1,4 @@
-@extends('template')
+@extends('template-v2')
 
 @section('title', 'Usuarios')
 
@@ -6,49 +6,54 @@
 
 
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Usuarios</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCreateUser">Nuevo Usuario</button>
+    <div class="card shadow-lg">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1>Usuarios</h1>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCreateUser">Nuevo Usuario</button>
+            </div>
+
+            <table id="table" class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Roles</th>
+                    <th style="width: 200px;">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($users as $user)
+                    <tr>
+                        <td>{{ $user->name }}</td>
+                        <td>{{ $user->email }}</td>
+                        <td>{{ $user->roles->pluck('name')->join(', ') }}</td>
+                        <td>
+                            <a href="javascript:void(0)"
+                               class="btn-edit-user"
+                               data-bs-toggle="modal"
+                               data-bs-target="#modalEditUser"
+                               data-id="{{ $user->id }}"
+                               data-name="{{ $user->name }}"
+                               data-email="{{ $user->email }}"
+                               data-roles="{{ $user->roles->pluck('name')->join(',') }}"
+                               data-instances="{{ $user->whatsappInstances->pluck('id')->join(',') }}"
+                               title="Editar usuario"
+                            >
+                                <i class="bi bi-pencil-square text-primary h4"></i>
+                            </a>
+
+                            <a type="submit" class="border-0 ms-2" title="Eliminar usuario">
+                                <i class="bi bi-trash text-danger h4"></i>
+                            </a>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+
     </div>
-
-    <table id="table" class="table table-striped table-bordered align-middle">
-        <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Roles</th>
-            <th style="width: 200px;">Acciones</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach($users as $user)
-            <tr>
-                <td>{{ $user->name }}</td>
-                <td>{{ $user->email }}</td>
-                <td>{{ $user->roles->pluck('name')->join(', ') }}</td>
-                <td>
-                    <a href="javascript:void(0)"
-                        class="btn-edit-user"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modalEditUser"
-                        data-id="{{ $user->id }}"
-                        data-name="{{ $user->name }}"
-                        data-email="{{ $user->email }}"
-                        data-roles="{{ $user->roles->pluck('name')->join(',') }}"
-                        data-instances="{{ $user->whatsappInstances->pluck('id')->join(',') }}"
-                        title="Editar usuario"
-                    >
-                        <i class="bi bi-pencil-square text-primary h4"></i>
-                    </a>
-
-                    <a type="submit" class="border-0 ms-2" title="Eliminar usuario">
-                        <i class="bi bi-trash text-danger h4"></i>
-                    </a>
-                </td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
 
 
     <!-- Modal Crear Usuario -->
@@ -98,10 +103,10 @@
                                                 @foreach($instances as $instance)
                                                     <div class="col-6">
                                                         <div class="form-check">
-                                                            <input class="form-check-input" 
-                                                                type="checkbox" 
-                                                                value="{{ $instance->id }}" 
-                                                                name="instances[]" 
+                                                            <input class="form-check-input"
+                                                                type="checkbox"
+                                                                value="{{ $instance->id }}"
+                                                                name="instances[]"
                                                                 id="create_instance_{{ $instance->id }}">
                                                             <label class="form-check-label" for="create_instance_{{ $instance->id }}">
                                                                 {{ $instance->name }} <small class="text-muted">({{ $instance->area }})</small>
@@ -173,10 +178,10 @@
                                                 <div class="col-6">
                                                     <div class="form-check">
                                                         {{-- Nota la clase 'edit-instance-checkbox' para el JS --}}
-                                                        <input class="form-check-input edit-instance-checkbox" 
-                                                            type="checkbox" 
-                                                            value="{{ $instance->id }}" 
-                                                            name="instances[]" 
+                                                        <input class="form-check-input edit-instance-checkbox"
+                                                            type="checkbox"
+                                                            value="{{ $instance->id }}"
+                                                            name="instances[]"
                                                             id="edit_instance_{{ $instance->id }}">
                                                         <label class="form-check-label" for="edit_instance_{{ $instance->id }}">
                                                             {{ $instance->name }}
@@ -215,18 +220,13 @@
                 loadingRecords: "Cargando...",
                 zeroRecords:    "No se encontraron resultados",
                 emptyTable:     "No hay datos disponibles en esta tabla",
-                // paginate: {
-                //     first:      "Primero",
-                //     previous:   "Anterior",
-                //     next:       "Siguiente",
-                //     last:       "Último"
-                // },
                 aria: {
                     sortAscending:  ": activar para ordenar la columna de manera ascendente",
                     sortDescending: ": activar para ordenar la columna de manera descendente"
                 }
             }
         });
+
 
         $('.btn-edit-user').on('click', function() {
             var button = $(this);

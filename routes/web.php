@@ -54,15 +54,15 @@ Route::post('/responses/reply', [MessageController::class, 'reply'])
 
      //Enviar mensajes
     // Asegúrate que esta línea esté dentro del grupo Route::middleware('auth')->group(...)
-Route::get('/enviar-mensajes', [MessageController::class, 'formSendMessages'])->name('messages.send.form'); 
+Route::get('/enviar-mensajes', [MessageController::class, 'formSendMessages'])->name('messages.send.form');
 //
     Route::post('/send-messages', [MessageController::class, 'sendMessage'])->name('messages.send');
-    
-    
+
+
     // Ver respuestas
    // Route::get('/respuestas', [MessageController::class, 'showResponses'])->name('messages.responses');
    // Route::post('/messages/reply', [MessageController::class, 'reply'])->name('messages.reply');
-   
+
    // Perfil de usuario
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -83,7 +83,6 @@ Route::get('/enviar-mensajes', [MessageController::class, 'formSendMessages'])->
     Route::post('/permission/addRoles', [\App\Http\Controllers\PermissionController::class, 'addRoles'])->name('permission.addRoles'); // asignar roles a permiso
     Route::get('/permission/getRoles', [\App\Http\Controllers\PermissionController::class, 'getRoles'])->name('permission.getRoles'); // obtener roles del permiso
 
-    
 });
 
 

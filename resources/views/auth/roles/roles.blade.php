@@ -1,46 +1,52 @@
-@extends('template')
+@extends('template-v2')
 @section('title', 'Roles')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Roles</h1>
-        <a class="btn btn-primary add-class">Nuevo Rol</a>
+    <div class="card shadow-lg">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1>Roles</h1>
+                <a class="btn btn-primary add-class">Nuevo Rol</a>
+            </div>
+
+            <div class="">
+                <table id="table" class="table table-striped table-hover  w-100">
+                    <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th style="width: 200px;">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($roles as $rol)
+                        <tr>
+                            <td>{{ $rol->name }}</td>
+                            <td>
+                                <a href="javascript:void(0)"
+                                   class="edit-class"
+                                   title="Editar Rol"
+                                   data-name=" {{ $rol->name }}"
+                                   data-id="{{ $rol->id }}"
+                                >
+                                    <i class="bi bi-pencil-square text-primary h4"></i>
+                                </a>
+
+                                <a href="javascript:void(0)" data-id="{{ $rol->id }}" class="border-0 ms-2 delete-class" title="Eliminar Rol">
+                                    <i class="bi bi-trash text-danger h4"></i>
+                                </a>
+                                <a href="javascript:void(0)"
+                                   class="add-permission"
+                                   data-role-id="{{ $rol->id }}">
+                                    <i class="bi bi-plus-circle h4 text-success"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-
-    <table id="table" class="table table-striped table-bordered align-middle">
-        <thead>
-        <tr>
-            <th>Nombre</th>
-            <th style="width: 200px;">Acciones</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach($roles as $rol)
-            <tr>
-                <td>{{ $rol->name }}</td>
-                <td>
-                    <a href="javascript:void(0)"
-                       class="edit-class"
-                       title="Editar Rol"
-                       data-name=" {{ $rol->name }}"
-                       data-id="{{ $rol->id }}"
-                    >
-                        <i class="bi bi-pencil-square text-primary h4"></i>
-                    </a>
-
-                    <a href="javascript:void(0)" data-id="{{ $rol->id }}" class="border-0 ms-2 delete-class" title="Eliminar Rol">
-                        <i class="bi bi-trash text-danger h4"></i>
-                    </a>
-                    <a href="javascript:void(0)"
-                        class="add-permission"
-                        data-role-id="{{ $rol->id }}">
-                        <i class="bi bi-plus-circle h4 text-success"></i>
-                    </a>
-                </td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
 
     <div class="modal fade" id="modalCreateRol" tabindex="-1" aria-labelledby="modalCreateRolLabel" aria-hidden="true">
         <div class="modal-dialog">

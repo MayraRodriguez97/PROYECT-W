@@ -1,0 +1,281 @@
+
+:root {
+    --primary-bg: #1A1A2E; /* Fondo oscuro principal */
+    --secondary-bg: #0F0F1A; /* Fondo más oscuro para el form/elementos */
+    --accent-blue: #3E63DD; /* Azul para botones y enlaces */
+    --text-light: #E0E0E0; /* Texto claro */
+    --text-muted: #888888; /* Texto secundario/gris */
+    --border-color: #33334F; /* Borde oscuro */
+    --input-bg: #22223D; /* Fondo de inputs */
+    --placeholder-color: #66667F; /* Color del placeholder */
+    --google-btn-bg: #2A2A47; /* Fondo del botón de Google */
+    --error-red: #DC3545; /* Rojo de error */
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; /* Similares a los de la imagen */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--primary-bg);
+    color: var(--text-light);
+    overflow: hidden; /* Para evitar scroll si el contenedor es más grande */
+}
+
+.login-wrapper {
+    background-color: var(--secondary-bg);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 1200px;
+    height: 80vh; /* Ajusta la altura si es necesario */
+    display: flex;
+    overflow: hidden;
+    border: 1px solid var(--border-color); /* Borde sutil */
+}
+
+.login-container {
+    display: flex;
+    width: 100%;
+}
+
+/* Columna Izquierda */
+.login-left {
+    flex: 1;
+    background-color: #1A1A2E; /* Fondo oscuro específico para el lado izquierdo */
+    position: relative;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+}
+
+.app-logo {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-light);
+    position: relative;
+    z-index: 10; /* Para que el logo esté encima de la ilustración */
+}
+
+.app-logo img {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    border-radius: 4px; /* Simular el logo cuadrado */
+}
+
+.illustration-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://via.placeholder.com/600x800/22223D/444466?text=Background+Illustration'); /* Reemplaza con tu imagen de fondo */
+    background-size: cover;
+    background-position: center;
+    opacity: 0.6; /* Un poco más de opacidad para la ilustración */
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+}
+
+.quote-area {
+    position: relative;
+    z-index: 10;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 80%;
+}
+
+.quote-area p {
+    margin-bottom: 10px;
+    font-style: italic;
+    color: var(--text-light); /* Texto de la cita más claro */
+}
+
+.quote-area .author {
+    font-weight: 500;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Columna Derecha */
+.login-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px;
+    background-color: var(--secondary-bg);
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+.login-form-content {
+    width: 100%;
+    max-width: 380px; /* Ancho máximo del formulario */
+}
+
+.welcome-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 10px;
+}
+
+.welcome-subtitle {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 40px;
+}
+
+/* Estilos de los campos de entrada personalizados */
+.form-label {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.custom-input-group {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    overflow: hidden;
+}
+
+.custom-input-group .input-group-text {
+    background-color: var(--input-bg);
+    border: none;
+    color: var(--text-muted);
+    padding: 0.75rem 1rem;
+    border-right: 1px solid var(--border-color);
+}
+
+.custom-form-control {
+    background-color: var(--input-bg);
+    border: none;
+    color: var(--text-light);
+    padding: 0.75rem 1rem;
+    box-shadow: none;
+}
+
+.custom-form-control::placeholder {
+    color: var(--placeholder-color);
+}
+
+.custom-form-control:focus {
+    background-color: var(--input-bg);
+    color: var(--text-light);
+    box-shadow: none;
+}
+
+.custom-input-group .form-control:focus {
+    border-color: transparent; /* Eliminar el borde azul por defecto de Bootstrap */
+    box-shadow: none;
+}
+
+.custom-input-group.is-invalid {
+    border-color: var(--error-red);
+}
+.custom-form-control.is-invalid {
+    border-color: transparent; /* El borde rojo será en el input-group */
+    box-shadow: none;
+}
+.invalid-feedback {
+    color: var(--error-red);
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+/* Botones */
+.custom-btn-primary {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: #fff;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.custom-btn-primary:hover {
+    background-color: #3050C0; /* Un poco más oscuro */
+    border-color: #3050C0;
+    color: #fff;
+}
+
+.custom-btn-google {
+    background-color: var(--google-btn-bg);
+    border-color: var(--border-color);
+    color: var(--text-light);
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.custom-btn-google:hover {
+    background-color: #3A3A57; /* Un poco más claro */
+    border-color: #4A4A67;
+    color: var(--text-light);
+}
+
+.forgot-password-link, .signup-link {
+    color: var(--accent-blue);
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+.forgot-password-link:hover, .signup-link:hover {
+    color: #6A87ED;
+}
+
+.signup-link-wrapper {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.btn-toggle-password {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 0.75rem 1rem;
+    border-left: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+.btn-toggle-password:hover {
+    color: var(--text-light);
+}
+
+/* Media Queries para responsividad */
+@media (max-width: 992px) {
+    .login-left {
+        display: none; /* Oculta la columna izquierda en pantallas pequeñas */
+    }
+    .login-wrapper {
+        width: 95%;
+        height: auto;
+        min-height: 80vh;
+    }
+    .login-container {
+        flex-direction: column;
+    }
+    .login-right {
+        border-radius: 15px; /* Redondea todo el card */
+        padding: 40px 20px;
+    }
+    .login-form-content {
+        max-width: 300px; /* Ajusta el ancho para móviles */
+    }
+}
