@@ -65,6 +65,23 @@
             </div>
         </li>
     @endcan
+    @can('ver mensajes')
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseViewMessage"
+                aria-expanded="false" aria-controls="collapseViewMessage">
+                <i class="bi bi-chat-text"></i>
+                <span>Ver Mensajes</span>
+            </a>
+            <div id="collapseViewMessage" class="collapse" aria-labelledby="headingConfig" data-parent="#accordionSidebar">
+                <div class="py-2 collapse-inner rounded  h-100">
+                    <a class="collapse-item text-body" href="{{ route('responses') }}">
+                        <i class="bi bi-send me-2 text-dark"></i>
+                        Mensajes
+                    </a>
+                </div>
+            </div>
+        </li>
+    @endcan
 
 {{--    <hr class="sidebar-divider d-none d-md-block">--}}
 
