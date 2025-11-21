@@ -61,6 +61,8 @@ class MessageController extends Controller
                 $numero = $rawNumber;
             }
             ///
+
+            
             $estatus = isset($fila[1]) ? trim($fila[1]) : '';
             $clasificacion = trim($fila[2]);
             $nombre = isset($fila[3]) ? trim($fila[3]) : '';
