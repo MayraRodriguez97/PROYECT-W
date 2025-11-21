@@ -21,7 +21,7 @@ class WebhookController extends Controller
 
         try {
             // ------------------------------------------------------------------
-            // 1. BUSCAR LA INSTANCIA
+            // 1. BUSCAR LA INSTANCIA (¡¡CORREGIDO!!)
             // ------------------------------------------------------------------
 
             // 'sessionId' está en el NIVEL RAÍZ del payload ($data)
@@ -42,7 +42,7 @@ class WebhookController extends Controller
             }
 
             // ------------------------------------------------------------------
-            // 2. PROCESAR EL MENSAJE
+            // 2. PROCESAR EL MENSAJE (¡¡CORREGIDO!!)
             // ------------------------------------------------------------------
 
             // 'event' también está en el NIVEL RAÍZ
@@ -72,32 +72,39 @@ class WebhookController extends Controller
 
                 
                 if ($fromJid && $content && trim($content) !== '') {
-                    
-                    // --- INICIO DE LA CORRECCIÓN DE NORMALIZACIÓN (REEMPLAZAR ESTE BLOQUE) ---
-                    // 1. Limpieza básica: Eliminar todo lo que no sea número del JID
-                    $rawPhone = preg_replace('/[^0-9]/', '', $fromJid); 
+                    // CAMBIOS--------- 20-11
+                    // Limpiamos el JID -ara obtener el número de 8 dígitos
+                    // 1. Limpieza básica
+$rawPhone = preg_replace('/[^0-9]/', '', $fromJid); 
 
-                    // 2. Extracción del ID de Cliente (8 dígitos)
-                    // Este será el ID de búsqueda en tu tabla 'clients'.
-                    if (strlen($rawPhone) >= 8) {
-                        // Tomamos los últimos 8 dígitos. Esto funciona para:
-                        // 503XXXXXXXX -> XXXXXXXX
-                        // (CWID largo) -> últimos 8 dígitos
-                        $cleanClientPhone = substr($rawPhone, -8);
-                    } else {
-                        // Si es menor a 8 dígitos, puede ser inválido o un ID corto.
-                        $cleanClientPhone = $rawPhone;
-                    }
+// 2. Si el número es GIGANTE (más de 12 dígitos) y no empieza con 503, 
+// es probable que sea un ID interno (LID) y no un teléfono.
+if (strlen($rawPhone) > 12 && !str_starts_with($rawPhone, '503')) {
+    
+    // INTENTO A: Buscar el teléfono real en otra parte del paquete de datos
+    // A veces viene en 'participant' o en datos del contacto
+    $realUser = $msgData['key']['participant'] ?? null;
+    if ($realUser) {
+        $rawPhone = preg_replace('/[^0-9]/', '', $realUser);
+    }
+}
 
-                    // 3. Formato E.164 (11 dígitos) para guardar en ClientMessages
-                    // Esto asegura que la columna 'from_number' no tenga el sufijo JID
-                    $messageFromNumber = '503' . $cleanClientPhone;
-                    // --- FIN DE LA CORRECCIÓN DE NORMALIZACIÓN ---
+// 3. Aplicar lógica de El Salvador (8 dígitos)
+$cleanClientPhone = $rawPhone;
+if (str_starts_with($rawPhone, '503') && strlen($rawPhone) >= 11) {
+    $cleanClientPhone = substr($rawPhone, 3); // Quitamos el 503
+}
+// Seguridad extra: si sigue siendo gigante, cortamos los últimos 8 (esperando que coincida)
+elseif (strlen($rawPhone) > 8) {
+     // A veces el LID no contiene el número, pero si lo contiene, esto ayuda.
+     // Si el LID es totalmente diferente, se guardará como LID y no hay mucho que hacer
+     // sin una API de "Contact Info".
+     // $cleanClientPhone = substr($rawPhone, -8); <--- Opcional
+}
 
-                    
                     // 1. Encontrar o crear al cliente
                     $client = ClientModel::firstOrCreate(
-                        ['phone' => $cleanClientPhone], // USANDO EL NÚMERO DE 8 DÍGITOS ESTANDARIZADO
+                        ['phone' => $cleanClientPhone],
                         ['name' => $msgData['pushName'] ?? 'Cliente Chat', 'dui' => '000000000', 'date' => Carbon::now()->toDateString()]
                     );
 
@@ -117,7 +124,8 @@ class WebhookController extends Controller
                         'client_id' => $client->id,
                         'user_id' => $userId,
                         'whatsapp_instance_id' => $instance->id,
-                        'from_number' => $messageFromNumber, // <--- ¡USANDO EL FORMATO ESTANDARIZADO DE 11 DÍGITOS!
+                        'from_number' => $cleanClientPhone,
+                        //'from_number' => $fromJid, // Guardamos el JID completo
                         'to_number' => $instance->phone, 
                         'message' => $content,
                         'direction' => 'inbound',
