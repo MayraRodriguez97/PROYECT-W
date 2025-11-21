@@ -17,7 +17,7 @@
     height: 100%; /* Ocupa el 100% del <main> */
     width: 100%;
     margin: 0 auto;
-    max-width: 1600px;
+    max-width: 100%;
     background-color: #f0f2f5;
 }
 
@@ -227,6 +227,140 @@ emoji-picker {
 emoji-picker.visible {
     display: block;
 }
+/* ================================================= */
+/* 🌙 DARK MODE ACTIVADO CON: html.dark-mode */
+/* ================================================= */
+html.dark-mode .whatsapp-app-container {
+    background-color: #111b21 !important;
+}
+
+html.dark-mode .chat-sidebar {
+    background-color: #202c33 !important;
+    border-right: 1px solid #111 !important;
+}
+
+html.dark-mode .chat-contact {
+    background-color: #202c33;
+    border-bottom: 1px solid #2b3942;
+    color: #e9edef;
+}
+html.dark-mode .chat-contact:hover {
+    background-color: #2a3942;
+}
+html.dark-mode .chat-contact.active {
+    background-color: #2b3942;
+}
+
+/* Texto en lista */
+html.dark-mode .contact-time {
+    color: #8696a0;
+}
+html.dark-mode .last-message {
+    color: #d1d7db;
+}
+
+/* Avatar borde */
+html.dark-mode .header-avatar {
+    background-color: #005c4b;
+}
+
+/* Sidebar Header */
+html.dark-mode .chat-sidebar-header {
+    background-color: #202c33;
+    border-bottom: 1px solid #2a3942;
+    color: #e9edef;
+}
+
+html.dark-mode .chat-header {
+    background-color: #202c33 !important;
+    border-bottom: 1px solid #2a3942;
+    color: #e9edef;
+}
+
+/* ================================================= */
+/* CHAT PRINCIPAL */
+/* ================================================= */
+
+html.dark-mode .chat-main {
+    background-color: #0b141a !important;
+}
+
+/* Contenedor mensajes */
+html.dark-mode .chat-thread {
+    scrollbar-color: #555 #111;
+}
+
+/* ================================================= */
+/* BURBUJAS */
+/* ================================================= */
+html.dark-mode .chat-bubble.inbound {
+    background-color: #202c33 !important;
+    color: #e9edef !important;
+}
+
+html.dark-mode .chat-bubble.outbound {
+    background-color: #005c4b !important;
+    color: #e9edef !important;
+}
+
+html.dark-mode .chat-meta {
+    color: #8696a0 !important;
+}
+html.dark-mode .read-status {
+    color: #53bdeb !important;
+}
+
+/* ================================================= */
+/* INPUT DE ESCRITURA */
+/* ================================================= */
+html.dark-mode .chat-input {
+    background-color: #202c33 !important;
+    border-top: 1px solid #2a3942 !important;
+}
+
+html.dark-mode .chat-input textarea {
+    background-color: #2a3942 !important;
+    color: #e9edef !important;
+}
+
+html.dark-mode .chat-input textarea::placeholder {
+    color: #8696a0 !important;
+}
+
+html.dark-mode .icon-button {
+    color: #c3c9cf !important;
+}
+
+html.dark-mode #file-name-preview {
+    background: #2a3942 !important;
+    color: #e9edef !important;
+}
+
+/* Botón verde WhatsApp */
+html.dark-mode .send-button,
+html.dark-mode .mic-button {
+    background-color: #00a884 !important;
+    color: white !important;
+}
+
+/* ================================================= */
+/* EMOJI PICKER */
+/* ================================================= */
+
+html.dark-mode emoji-picker {
+    background-color: #1f2c33 !important;
+    border-color: #2b3b44 !important;
+    color: #e9edef !important;
+}
+
+html.dark-mode emoji-picker::part(category-button) {
+    filter: invert(1) brightness(1.4);
+}
+
+html.dark-mode emoji-picker::part(emoji) {
+    filter: invert(1) brightness(1.4);
+}
+
 </style>
 @endpush
 
@@ -239,7 +373,7 @@ emoji-picker.visible {
     $userName = Auth::check() ? Auth::user()->name : 'Agente';
     // MEJORA: Obtenemos el avatar del usuario (agente)
     // Asume que tu User model tiene 'avatar_url' (si no, cámbialo o déjalo)
-    $userAvatar = Auth::check() ? Auth::user()->avatar_url : null; 
+    $userAvatar = Auth::check() ? Auth::user()->avatar_url : null;
 @endphp
 
 <div class="whatsapp-app-container">
@@ -270,7 +404,7 @@ emoji-picker.visible {
         <div class="chat-sidebar">
             <div class="chat-sidebar-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    
+
                     <div class="header-avatar">
                         @if($userAvatar)
                             <img src="{{ $userAvatar }}" alt="Avatar">
@@ -290,20 +424,20 @@ emoji-picker.visible {
                 @php
                     $ultimo = $conversacionItem->first();
                     $numeroClienteLimpio = preg_replace('/[^0-9]/', '', $numeroCliente);
-                    
+
                     $unreadCount = $conversacionItem
                         ->where('is_read', false)
                         ->where('direction', 'inbound')
                         ->count();
-                    
+
                     // MEJORA: Esta es la variable que tu CONTROLADOR debe enviar
                     // gracias a la corrección que hicimos en `showResponses`
-                    $contactAvatarUrl = $ultimo->contact_avatar_url ?? null; 
+                    $contactAvatarUrl = $ultimo->contact_avatar_url ?? null;
                 @endphp
-                
+
                 <div class="chat-contact {{ $numeroSeleccionado === $numeroClienteLimpio ? 'active' : '' }}">
                     <a href="{{ url('/responses?phone=' . $numeroClienteLimpio) }}">
-                        
+
                         <div class="header-avatar">
                             @if($contactAvatarUrl)
                                 <img src="{{ $contactAvatarUrl }}" alt="Avatar de {{ $numeroClienteLimpio }}">
@@ -332,7 +466,7 @@ emoji-picker.visible {
                                         {{ \Illuminate\Support\Str::limit($ultimo->message ?? 'Sin mensajes', 30) }}
                                     @endif
                                 </small>
-                                
+
                                 @if($unreadCount > 0)
                                     <span class="unread-badge">{{ $unreadCount }}</span>
                                 @endif
@@ -421,24 +555,24 @@ emoji-picker.visible {
                     <input type="hidden" name="whatsapp_instance_id" value="{{ $instance->id }}">
 
                     <emoji-picker id="emoji-picker"></emoji-picker>
-                    
+
                     <button type="button" class="icon-button" id="emoji-button" title="Emojis"><i class="far fa-smile"></i></button>
 
                     <label for="media_file" class="icon-button" title="Adjuntar archivo">
                         <i class="fas fa-paperclip"></i>
-                        <input type="file" name="media_file" id="media_file" 
-                            accept="image/*,audio/*,video/*,.pdf" 
-                            style="display: none;" 
+                        <input type="file" name="media_file" id="media_file"
+                            accept="image/*,audio/*,video/*,.pdf"
+                            style="display: none;"
                             onchange="showFileName(this)">
                     </label>
                     <span id="file-name-preview"></span>
-                    
+
                     <textarea name="message" id="message-input" placeholder="Escribe un mensaje..."></textarea>
-                    
+
                     <button type="submit" class="icon-button send-button" id="send-button" title="Enviar mensaje" style="display: none;">
                         <i class="fas fa-paper-plane"></i>
                     </button>
-                    
+
                     <button type="button" class="icon-button mic-button" id="mic-button" title="Grabar audio">
                         <i class="fas fa-microphone"></i>
                     </button>
@@ -464,7 +598,7 @@ emoji-picker.visible {
 
     // TODO EL CÓDIGO AHORA VA DENTRO DE ESTE BLOQUE
     document.addEventListener("DOMContentLoaded", function() {
-        
+
         // 1. Scroll automático al último mensaje
         const thread = document.getElementById('chat-thread');
         if (thread) {
@@ -486,7 +620,7 @@ emoji-picker.visible {
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
         }
-        
+
         // --- LÓGICA DEL BOTÓN MIC/ENVIAR ---
         if (messageInput && sendButton && micButton) {
             messageInput.addEventListener('input', function() {
@@ -517,7 +651,7 @@ emoji-picker.visible {
                 // Dispara el evento 'input' manualmente para que cambie el botón
                 messageInput.dispatchEvent(new Event('input', { bubbles: true }));
             });
-            
+
             // Ocultar si se hace click fuera
             document.body.addEventListener('click', (e) => {
                 if (emojiPicker.classList.contains('visible') && e.target.id !== 'emoji-button' && !emojiPicker.contains(e.target)) {
@@ -528,16 +662,16 @@ emoji-picker.visible {
 
         // --- LÓGICA PARA GRABAR AUDIO ---
         if (micButton && replyForm && messageInput) {
-            
+
             const startRecording = async () => {
                 try {
                     // 1. Pedir permiso
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    
+
                     // 2. Iniciar MediaRecorder
                     mediaRecorder = new MediaRecorder(stream);
                     recordedChunks = [];
-                    
+
                     mediaRecorder.addEventListener('dataavailable', event => {
                         if (event.data.size > 0) recordedChunks.push(event.data);
                     });
@@ -552,7 +686,7 @@ emoji-picker.visible {
                         // 5. Adjuntar al input <input type="file">
                         const dataTransfer = new DataTransfer();
                         dataTransfer.items.add(audioFile);
-                        
+
                         const fileInput = document.getElementById('media_file');
                         fileInput.files = dataTransfer.files;
 
@@ -582,7 +716,7 @@ emoji-picker.visible {
             micButton.addEventListener('mousedown', startRecording);
             micButton.addEventListener('mouseup', stopRecording);
             micButton.addEventListener('mouseleave', () => { // Si saca el mouse
-                if (isRecording) stopRecording(); 
+                if (isRecording) stopRecording();
             });
         }
     }); // <-- FIN DEL DOMContentLoaded
@@ -599,4 +733,35 @@ emoji-picker.visible {
         }
     }
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const html = document.documentElement;
+        const icon = document.getElementById("themeIcon");
+
+        // Aplicar estado guardado
+        if (localStorage.theme === "dark") {
+            html.classList.add("dark-mode");
+            icon.classList.remove("fa-moon");
+            icon.classList.add("fa-sun");
+        }
+
+        document.getElementById("themeToggle").addEventListener("click", function(e) {
+            e.preventDefault();
+
+            const isDark = html.classList.toggle("dark-mode");
+
+            if (isDark) {
+                localStorage.theme = "dark";
+                icon.classList.remove("fa-moon");
+                icon.classList.add("fa-sun");
+            } else {
+                localStorage.theme = "light";
+                icon.classList.remove("fa-sun");
+                icon.classList.add("fa-moon");
+            }
+        });
+    });
+</script>
+
+
 @endpush
