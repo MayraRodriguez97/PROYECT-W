@@ -47,11 +47,20 @@ class MessageController extends Controller
                 continue;
             }
 
-            $numero = preg_replace('/\D/', '', $fila[0]);
-            if (str_starts_with($numero, '503')) {
-                $numero = substr($numero, 3);
+           // $numero = preg_replace('/\D/', '', $fila[0]);
+            //if (str_starts_with($numero, '503')) {
+              //  $numero = substr($numero, 3);
+            //}  
+            //  // CAMBIOS--------- 20-11
+            //correccion ----------
+            $rawNumber = preg_replace('/\D/', '', $fila[0]);
+            if (strlen($rawNumber) > 8) {
+                // Si tiene el 503 o es muy largo, cortamos los últimos 8 dígitos
+                $numero = substr($rawNumber, -8); 
+            } else {
+                $numero = $rawNumber;
             }
-            
+            ///
             $estatus = isset($fila[1]) ? trim($fila[1]) : '';
             $clasificacion = trim($fila[2]);
             $nombre = isset($fila[3]) ? trim($fila[3]) : '';
@@ -279,14 +288,18 @@ class MessageController extends Controller
         }
 
         $instance = WhatsappInstance::findOrFail($request->whatsapp_instance_id);
-        $numero = preg_replace('/[^0-9]/', '', $request->phone); 
+        //$numero = preg_replace('/[^0-9]/', '', $request->phone); 
+           // CAMBIOS--------- 20-11
+        //correccion -----
+         $rawNumber = preg_replace('/[^0-9]/', '', $request->phone); 
+        $numero = (strlen($rawNumber) > 8) ? substr($rawNumber, -8) : $rawNumber;
         
         $senderUserId = Auth::id();
         $user = Auth::user();
         $clientGuzzle = new Client(['verify' => false]);
         
         $apiRecipient = "503{$numero}"; 
-
+        ///
         $clientModel = ClientModel::firstOrCreate(
             ['phone' => $numero], 
             ['name' => 'Cliente Chat', 'dui' => '000000000', 'date' => now()->toDateString()]
@@ -399,8 +412,12 @@ class MessageController extends Controller
         $isAdmin = $user->isSuperAdmin() || $user->hasRole('admin');
         
         $numeroSeleccionado = $request->get('phone');
-        $numeroLimpio = $numeroSeleccionado ? preg_replace('/[^0-9]/', '', $numeroSeleccionado) : null;
-
+           // CAMBIOS--------- 20-11
+        //$numeroLimpio = $numeroSeleccionado ? preg_replace('/[^0-9]/', '', $numeroSeleccionado) : null;
+        //correccion 
+         $rawNumber = $numeroSeleccionado ? preg_replace('/[^0-9]/', '', $numeroSeleccionado) : null;
+        $numeroLimpio = (strlen($rawNumber) > 8) ? substr($rawNumber, -8) : $rawNumber;
+        ///
         $instance = $user->whatsappInstances()->first();
 
         $conversacion = collect();
