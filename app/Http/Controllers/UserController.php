@@ -15,7 +15,7 @@ class UserController extends Controller
     // Mostrar la lista con roles
     public function index()
     {
-        $users = User::with('roles')->paginate(10);
+        $users = User::with('roles')->get();
         $roles = Role::all();
         $instances = WhatsappInstance::all();
         return view('auth.users.users', compact('users', 'roles', 'instances'));
@@ -71,7 +71,6 @@ class UserController extends Controller
 
         $user->syncRoles($request->roles);
         $user->whatsappInstances()->sync($request->input('instances', []));
-        // 👆👆👆 FIN DEL BLOQUE NUEVO 👆👆👆
         return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente.');
     }
 

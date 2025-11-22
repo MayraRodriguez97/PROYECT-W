@@ -65,3 +65,43 @@
     cursor: pointer;
 }
 
+/* === DARK MODE CHAT === */
+body.dark-mode .chat-box {
+    background: #1e1e1e !important;
+    color: #e4e4e4 !important;
+}
+
+/* Mensaje entrante */
+body.dark-mode .inbound {
+    background-color: #2a2a2a !important;
+    color: #ddd !important;
+    border-top-left-radius: 0 !important;
+}
+
+/* Mensaje saliente */
+body.dark-mode .outbound {
+    background-color: #1f3d2b !important; /* Verde oscuro elegante */
+    color: #d8ffd8 !important;
+    border-top-right-radius: 0 !important;
+}
+
+/* Metadata (hora) */
+body.dark-mode .chat-meta {
+    color: #aaa !important;
+}
+
+/* Input */
+body.dark-mode .chat-input input {
+    background-color: #2a2a2a !important;
+    color: #eee !important;
+    border: 1px solid #444 !important;
+}
+
+body.dark-mode .chat-input input::placeholder {
+    color: #888 !important;
+}
+
+/* Botón enviar */
+body.dark-mode .chat-input button {
+    background-color: #128c55 !important; /* Color WhatsApp oscuro */
+}
