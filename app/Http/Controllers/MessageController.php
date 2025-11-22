@@ -47,10 +47,13 @@ class MessageController extends Controller
                 continue;
             }
 
-            $numero = preg_replace('/\D/', '', $fila[0]);
+           $numero = preg_replace('/\D/', '', $fila[0]);
             if (str_starts_with($numero, '503')) {
-                $numero = substr($numero, 3);
-            }
+              $numero = substr($numero, 3);
+            }  
+           
+            ///
+
             
             $estatus = isset($fila[1]) ? trim($fila[1]) : '';
             $clasificacion = trim($fila[2]);
@@ -280,13 +283,8 @@ class MessageController extends Controller
 
         $instance = WhatsappInstance::findOrFail($request->whatsapp_instance_id);
         $numero = preg_replace('/[^0-9]/', '', $request->phone); 
-        
-        $senderUserId = Auth::id();
-        $user = Auth::user();
-        $clientGuzzle = new Client(['verify' => false]);
-        
-        $apiRecipient = "503{$numero}"; 
-
+    
+    
         $clientModel = ClientModel::firstOrCreate(
             ['phone' => $numero], 
             ['name' => 'Cliente Chat', 'dui' => '000000000', 'date' => now()->toDateString()]
@@ -399,8 +397,9 @@ class MessageController extends Controller
         $isAdmin = $user->isSuperAdmin() || $user->hasRole('admin');
         
         $numeroSeleccionado = $request->get('phone');
+           // CAMBIOS--------- 20-11
         $numeroLimpio = $numeroSeleccionado ? preg_replace('/[^0-9]/', '', $numeroSeleccionado) : null;
-
+        
         $instance = $user->whatsappInstances()->first();
 
         $conversacion = collect();

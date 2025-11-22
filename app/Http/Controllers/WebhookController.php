@@ -72,8 +72,8 @@ class WebhookController extends Controller
 
                 
                 if ($fromJid && $content && trim($content) !== '') {
-                    
-                    // Limpiamos el JID para obtener el número de 8 dígitos
+                    // CAMBIOS--------- 20-11
+                    // Limpiamos el JID -ara obtener el número de 8 dígitos
                     // 1. Limpieza básica
 $rawPhone = preg_replace('/[^0-9]/', '', $fromJid); 
 
