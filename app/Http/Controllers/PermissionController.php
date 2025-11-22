@@ -9,7 +9,7 @@ use Spatie\Permission\Models\Role;
 
 class PermissionController extends Controller
 {
-    // Listado de permisos
+    // Listado de permisos a
     public function index()
     {
         $permissions = Permission::select('id', 'name', 'created_at')->get();

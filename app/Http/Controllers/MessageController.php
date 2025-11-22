@@ -23,9 +23,11 @@ class MessageController extends Controller
     // FUNCIONES DE CARGA Y PREVISUALIZACIÓN (SIN CAMBIOS)
     // ----------------------------------------------------------------------
 
+
+    // este es unb contrrolador
     public function formUploadExcel()
     {
-        return view('subir-excel');
+        return view('subir-excel'); //retorna la vista de excel
     }
 
     public function subirExcel(Request $request)
@@ -50,11 +52,11 @@ class MessageController extends Controller
            $numero = preg_replace('/\D/', '', $fila[0]);
             if (str_starts_with($numero, '503')) {
               $numero = substr($numero, 3);
-            }  
-           
+            }
+
             ///
 
-            
+
             $estatus = isset($fila[1]) ? trim($fila[1]) : '';
             $clasificacion = trim($fila[2]);
             $nombre = isset($fila[3]) ? trim($fila[3]) : '';
@@ -128,11 +130,11 @@ class MessageController extends Controller
         }
         return view('messages-preview', compact('mensajesPorCategoria'));
     }
-    
+
     public function formSendMessages()
     {
         $categorias = session('numeros_por_categoria', []);
-        $instances = WhatsappInstance::all(); 
+        $instances = WhatsappInstance::all();
         return view('send-messages', compact('categorias', 'instances'));
     }
 
@@ -149,15 +151,15 @@ class MessageController extends Controller
         }
 
         $request->validate(['whatsapp_instance_id' => 'required|exists:whatsapp_instances,id']);
-        
+
         $instance = WhatsappInstance::findOrFail($request->whatsapp_instance_id);
-        
-        $apiKey = $instance->api_key; 
+
+        $apiKey = $instance->api_key;
         $sendMessageUrl = "https://wasenderapi.com/api/send-message";
-        $sessionName = $instance->name; 
-        
+        $sessionName = $instance->name;
+
         $senderUserId = Auth::id();
-        
+
         // Corrección para 'super admin'
         $isAdmin = Auth::user()->isSuperAdmin() || Auth::user()->hasRole('admin');
 
@@ -166,11 +168,11 @@ class MessageController extends Controller
             Log::warning("El usuario no-admin (ID: $senderUserId) intentó hacer un envío masivo y fue bloqueado.");
             return back()->withErrors(['message' => 'No tienes permiso de administrador para realizar envíos masivos.']);
         }
-        
-        $client = new Client(['verify' => false]); 
+
+        $client = new Client(['verify' => false]);
         $totalSent = 0;
         $totalFailed = 0;
-        
+
         foreach ($datosPorCategoria as $categoria => $numeros) {
             $plantilla = MessageTemplate::whereHas('classification', function ($query) use ($categoria) {
                 $query->where('name', $categoria);
@@ -179,12 +181,12 @@ class MessageController extends Controller
             if (!$plantilla) continue;
 
             foreach ($numeros as $dato) {
-                $clientName = $dato['nombre'] ?? 'Cliente Sin Nombre'; 
-                $clientDui = $dato['dui'] ?? '000000000'; 
-                $currentDate = now()->toDateString(); 
-                
+                $clientName = $dato['nombre'] ?? 'Cliente Sin Nombre';
+                $clientDui = $dato['dui'] ?? '000000000';
+                $currentDate = now()->toDateString();
+
                 $encargadoCorreo = $dato['encargadoCorreo'] ?? null;
-                $encargadoId = $senderUserId; 
+                $encargadoId = $senderUserId;
 
                 if ($encargadoCorreo) {
                     $encargado = User::where('email', $encargadoCorreo)->first();
@@ -197,9 +199,9 @@ class MessageController extends Controller
                     ['phone' => $dato['numero']],
                     [
                         'name' => $clientName,
-                        'dui' => $clientDui, 
+                        'dui' => $clientDui,
                         'date' => $currentDate,
-                        'moratorium_classification_id' => $plantilla->moratorium_classification_id ?? null 
+                        'moratorium_classification_id' => $plantilla->moratorium_classification_id ?? null
                     ]
                 );
 
@@ -216,10 +218,10 @@ class MessageController extends Controller
 
                 try {
                     $response = $client->post($sendMessageUrl, [
-                        'headers' => $this->getDynamicHeaders($apiKey), 
+                        'headers' => $this->getDynamicHeaders($apiKey),
                         'json' => [
                             'session' => $sessionName,
-                            'to'      => $chatId, 
+                            'to'      => $chatId,
                             'text'    => $msgPersonalizado
                         ],
                     ]);
@@ -236,20 +238,20 @@ class MessageController extends Controller
                         'to_number' => $dato['numero'],
                         'message' => $msgPersonalizado,
                         'direction' => 'outbound',
-                        'is_read' => true, 
+                        'is_read' => true,
                         'received_at' => now(),
                         'user_id' => $encargadoId,
                     ]);
                     $totalSent++;
 
                 } catch (ClientException | ServerException | \Exception $e) {
-                    
+
                     $numeroDebug = $dato['numero'] ?? 'desconocido';
                     $errorDetails = method_exists($e, 'hasResponse') ? $e->getResponse()->getBody()->getContents() : $e->getMessage();
                     Log::error("Fallo de API: Error al intentar enviar al número $numeroDebug. Detalles: " . $errorDetails);
 
                     $totalFailed++;
-                   
+
                 }
 
                 // --- ¡¡AQUÍ ESTÁ LA PAUSA!! ---
@@ -258,7 +260,7 @@ class MessageController extends Controller
             } // Fin foreach $numeros
         } // Fin foreach $datosPorCategoria
 
-        session()->forget('numeros_por_categoria'); 
+        session()->forget('numeros_por_categoria');
         $mensajeFinal = "Proceso terminado. Mensajes enviados: {$totalSent}. Fallidos: {$totalFailed}.";
         return back()->with('status', $mensajeFinal);
     }
@@ -267,7 +269,7 @@ class MessageController extends Controller
     // ----------------------------------------------------------------------
     // RESPUESTA MANUAL
     // ----------------------------------------------------------------------
-    
+
     public function reply(Request $request)
     {
         $request->validate([
@@ -282,11 +284,11 @@ class MessageController extends Controller
         }
 
         $instance = WhatsappInstance::findOrFail($request->whatsapp_instance_id);
-        $numero = preg_replace('/[^0-9]/', '', $request->phone); 
-    
-    
+        $numero = preg_replace('/[^0-9]/', '', $request->phone);
+
+
         $clientModel = ClientModel::firstOrCreate(
-            ['phone' => $numero], 
+            ['phone' => $numero],
             ['name' => 'Cliente Chat', 'dui' => '000000000', 'date' => now()->toDateString()]
         );
         $clientModel->users()->syncWithoutDetaching([$senderUserId]);
@@ -301,21 +303,21 @@ class MessageController extends Controller
         $mediaType = null;
 
         try {
-            
+
             // CASO 1: SE ENVÍA UN ARCHIVO
             if ($request->hasFile('media_file')) {
                 $file = $request->file('media_file');
                 $mimeType = $file->getMimeType();
-                
+
                 $path = $file->store('media/' . $instance->id, 'public');
-                $mediaUrl = $path; 
-                
+                $mediaUrl = $path;
+
                 if (str_starts_with($mimeType, 'image/')) $mediaType = 'image';
                 elseif (str_starts_with($mimeType, 'audio/')) $mediaType = 'audio';
                 elseif (str_starts_with($mimeType, 'video/')) $mediaType = 'video';
                 else $mediaType = 'document';
 
-                $sendFileUrl = "https://wasenderapi.com/api/send-file"; 
+                $sendFileUrl = "https://wasenderapi.com/api/send-file";
 
                 $response = $clientGuzzle->post($sendFileUrl, [
                     'headers' => [
@@ -324,7 +326,7 @@ class MessageController extends Controller
                     'multipart' => [
                         ['name' => 'session', 'contents' => $instance->name],
                         ['name' => 'to', 'contents' => $apiRecipient],
-                        ['name' => 'caption', 'contents' => $messageContent], 
+                        ['name' => 'caption', 'contents' => $messageContent],
                         [
                             'name'     => 'file',
                             'contents' => fopen(storage_path('app/public/' . $path), 'r'),
@@ -337,7 +339,7 @@ class MessageController extends Controller
             } else {
                 $sendMessageUrl = "https://wasenderapi.com/api/send-message";
                 $response = $clientGuzzle->post($sendMessageUrl, [
-                    'headers' => $this->getDynamicHeaders($instance->api_key), 
+                    'headers' => $this->getDynamicHeaders($instance->api_key),
                     'json' => [
                         'session' => $instance->name,
                         'to'      => $apiRecipient,
@@ -363,17 +365,17 @@ class MessageController extends Controller
             ClientMessage::create([
                 'client_id' => $clientModel->id,
                 'whatsapp_instance_id' => $instance->id,
-                'from_number' => $instance->phone, 
-                'to_number' => $numero, 
-                'message' => $messageContent, 
+                'from_number' => $instance->phone,
+                'to_number' => $numero,
+                'message' => $messageContent,
                 'media_url' => $mediaUrl,
-                'media_type' => $mediaType, 
+                'media_type' => $mediaType,
                 'direction' => 'outbound',
                 'is_read' => true,
                 'received_at' => now(),
                 'user_id' => $senderUserId,
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Error FATAL al guardar respuesta localmente:', [$e->getMessage()]);
             return back()->withErrors(['message' => 'Error de BD al guardar la respuesta.']);
@@ -390,16 +392,16 @@ class MessageController extends Controller
     {
         // Nota: Esta función asume que la ruta 'responses' está
         // protegida por 'middleware('auth')' en tu archivo routes/web.php
-        
+
         $user = Auth::user();
-        
+
         // --- ¡¡CORRECCIÓN DE SUPER ADMIN (3/3)!! ---
         $isAdmin = $user->isSuperAdmin() || $user->hasRole('admin');
-        
+
         $numeroSeleccionado = $request->get('phone');
            // CAMBIOS--------- 20-11
         $numeroLimpio = $numeroSeleccionado ? preg_replace('/[^0-9]/', '', $numeroSeleccionado) : null;
-        
+
         $instance = $user->whatsappInstances()->first();
 
         $conversacion = collect();
@@ -413,17 +415,17 @@ class MessageController extends Controller
             $conversacion = ClientMessage::where('client_id', $clientModel->id)
                 ->orderBy('received_at', 'asc')
                 ->get();
-                
+
             $lastMessage = $conversacion->last();
             if ($lastMessage && $lastMessage->whatsapp_instance_id) {
-                
+
                 $chatInstance = WhatsappInstance::find($lastMessage->whatsapp_instance_id);
-                
+
                 if ($chatInstance && ($isAdmin || $user->whatsappInstances->contains($chatInstance))) {
-                    $instance = $chatInstance; 
+                    $instance = $chatInstance;
                 }
             }
-            
+
             if ($clientModel) {
                 ClientMessage::where('client_id', $clientModel->id)
                     ->where('direction', 'inbound')
@@ -449,20 +451,20 @@ class MessageController extends Controller
             $numero = $item->direction === 'inbound' ? $item->from_number : $item->to_number;
             $rawPhone = preg_replace('/[^0-9]/', '', $numero);
             if (str_starts_with($rawPhone, '503') && strlen($rawPhone) > 8) {
-                return substr($rawPhone, 3); 
+                return substr($rawPhone, 3);
             }
-            return $rawPhone; 
+            return $rawPhone;
         });
 
         $phoneNumbers = $chatsConRespuestas->keys();
 
-        $clientAvatars = ClientModel::whereIn('phone', $phoneNumbers) 
-            ->whereNotNull('avatar_url') 
-            ->pluck('avatar_url', 'phone'); 
+        $clientAvatars = ClientModel::whereIn('phone', $phoneNumbers)
+            ->whereNotNull('avatar_url')
+            ->pluck('avatar_url', 'phone');
 
         $chatsConRespuestas->each(function ($messages, $phoneNumber) use ($clientAvatars) {
-            
-            $avatarUrl = $clientAvatars->get($phoneNumber); 
+
+            $avatarUrl = $clientAvatars->get($phoneNumber);
 
             if ($avatarUrl) {
                 $messages->each(function ($message) use ($avatarUrl) {
@@ -470,11 +472,11 @@ class MessageController extends Controller
                 });
             }
         });
-        
+
 
         return view('responses', compact('chatsConRespuestas', 'conversacion', 'numeroSeleccionado', 'instance'));
     }
-    
+
     private function getDynamicHeaders(string $apiKey): array
     {
         return [
@@ -483,8 +485,8 @@ class MessageController extends Controller
             'Content-Type' => 'application/json',
         ];
     }
-    
-    
+
+
     public function testInstance($id)
     {
         $instance = WhatsappInstance::findOrFail($id);
