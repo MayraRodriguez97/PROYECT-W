@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\MoratoriumClassification;
 use App\Models\MessageTemplate;
+use Illuminate\Support\Facades\Log; // ✅ Corrección: importar Log correctamente
 
 class Client extends Model
 {
@@ -18,32 +19,40 @@ class Client extends Model
         'moratorium_classification_id'
     ];
 
-    // Relación con usuarios encargados
+    /**
+     * Relación muchos a muchos con usuarios encargados.
+     */
     public function users()
     {
         return $this->belongsToMany(User::class, 'user_client');
     }
 
-    // Relación con clasificación de mora
+    /**
+     * Relación con clasificación de mora.
+     */
     public function classification()
     {
         return $this->belongsTo(MoratoriumClassification::class, 'moratorium_classification_id');
     }
 
-    // Relación indirecta con plantilla de mensaje
+    /**
+     * Relación con plantilla de mensaje (vía clasificación).
+     */
     public function template()
     {
         return $this->hasOneThrough(
             MessageTemplate::class,
             MoratoriumClassification::class,
-            'id', // Foreign key on moratorium_classifications
-            'moratorium_classification_id', // Foreign key on message_templates
-            'moratorium_classification_id', // Local key on clients
-            'id' // Local key on moratorium_classifications
+            'id',                             // FK en classification
+            'moratorium_classification_id',   // FK en template
+            'moratorium_classification_id',   // FK local en client
+            'id'                              // PK en classification
         );
     }
 
-    // ✅ Genera mensaje personalizado usando relaciones Eloquent
+    /**
+     * Genera mensaje personalizado basado en plantilla.
+     */
     public static function getMessage($clientId)
     {
         $client = self::with(['template'])->find($clientId);
@@ -52,23 +61,23 @@ class Client extends Model
             return 'Cliente no encontrado o sin plantilla asociada.';
         }
 
-        $message = str_replace(
+        return str_replace(
             [':nombre_cliente', '{nombre}'],
             $client->name,
             $client->template->template
         );
-
-        return $message;
     }
 
-    // ✅ Envío masivo con manejo de errores
+    /**
+     * Envío masivo con manejo de errores.
+     */
     public static function sendMassive($clientMessage, $sendMessageUrl, $apiToken)
     {
         $clients = self::with(['template'])->get();
 
         foreach ($clients as $client) {
             if (!$client->template) {
-                \Log::warning('Cliente sin plantilla, se omite', ['client_id' => $client->id]);
+                Log::warning('Cliente sin plantilla, se omite', ['client_id' => $client->id]);
                 continue;
             }
 
@@ -88,7 +97,7 @@ class Client extends Model
                     ],
                 ]);
             } catch (\Exception $e) {
-                \Log::error('Error al enviar mensaje masivo', [
+                Log::error('Error al enviar mensaje masivo', [
                     'client_id' => $client->id,
                     'error' => $e->getMessage()
                 ]);
