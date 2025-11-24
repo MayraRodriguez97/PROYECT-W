@@ -14,15 +14,19 @@ class ClientMessage extends Model
     }
 
     protected $fillable = [
+        'client_id',
+        'whatsapp_instance_id',
+        'user_id',
         'from_number',
         'to_number',
-        'message',
-        'direction',
-        'received_at',
         'phone',
-        'whatsapp_instance_id',
-        'client_id',
-        'user_id',
+        'from_jid',     // Importante
+        'message',
+        'media_url',
+        'media_type',
+        'direction',
+        'is_read',
+        'received_at'
     ];
 
     // Relación con el cliente
@@ -56,4 +60,7 @@ class ClientMessage extends Model
               ->orWhere('to_number', 'LIKE', "%{$numeroLimpio}%");
         });
     }
+    protected $casts = [
+        'received_at' => 'datetime', // Esto convierte el texto a objeto Carbon
+    ];
 }

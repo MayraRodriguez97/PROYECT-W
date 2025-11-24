@@ -450,7 +450,7 @@ html.dark-mode emoji-picker::part(emoji) {
                             <div class="contact-row">
                                 <strong>{{ $numeroClienteLimpio }}</strong>
                                 <small class="contact-time">
-                                    {{ $ultimo->received_at ? \Carbon\Carbon::parse($ultimo->received_at)->format('H:i') : '' }}
+                                    {{ $ultimo->received_at ? \Carbon\Carbon::parse($ultimo->received_at)->format('h:i A') : '' }}
                                 </small>
                             </div>
                             <div class="contact-row">
@@ -533,7 +533,7 @@ html.dark-mode emoji-picker::part(emoji) {
                         @endif
 
                         <div class="chat-meta">
-                            <span>{{ $mensaje->received_at ? \Carbon\Carbon::parse($mensaje->received_at)->format('H:i') : '' }}</span>
+                            <span>{{ $mensaje->received_at ? \Carbon\Carbon::parse($mensaje->received_at)->format('h:i A') : '' }}</span>
                             @if($isOutbound)
                                 <span class="read-status" title="Leído"><i class="fas fa-check-double"></i></span>
                             @endif

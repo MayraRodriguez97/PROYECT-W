@@ -458,7 +458,7 @@ class MessageController extends Controller
             $clientModel->users()->syncWithoutDetaching([$user->id]);
 
             $conversacion = ClientMessage::where('client_id', $clientModel->id)
-                ->orderBy('received_at', 'asc')
+                ->orderBy('id', 'asc') // <--- CAMBIA 'received_at' POR 'id'
                 ->get();
 
             $lastMessage = $conversacion->last();
