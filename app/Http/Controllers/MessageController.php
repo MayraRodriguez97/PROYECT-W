@@ -160,16 +160,16 @@ class MessageController extends Controller
 
         $senderUserId = Auth::id();
 
-        // Corrección para 'super admin'
         $isAdmin = Auth::user()->isSuperAdmin() || Auth::user()->hasRole('admin');
 
-        // REGLA: Solo los administradores pueden enviar mensajes masivos
         if (!$isAdmin) {
             Log::warning("El usuario no-admin (ID: $senderUserId) intentó hacer un envío masivo y fue bloqueado.");
             return back()->withErrors(['message' => 'No tienes permiso de administrador para realizar envíos masivos.']);
         }
 
-        $client = new Client(['verify' => false]);
+        // Timeout aumentado a 20 para evitar desconexiones rápidas
+        $client = new Client(['verify' => false, 'timeout' => 20]);
+
         $totalSent = 0;
         $totalFailed = 0;
 
@@ -181,42 +181,49 @@ class MessageController extends Controller
             if (!$plantilla) continue;
 
             foreach ($numeros as $dato) {
-                $clientName = $dato['nombre'] ?? 'Cliente Sin Nombre';
-                $clientDui = $dato['dui'] ?? '000000000';
-                $currentDate = now()->toDateString();
-
-                $encargadoCorreo = $dato['encargadoCorreo'] ?? null;
-                $encargadoId = $senderUserId;
-
-                if ($encargadoCorreo) {
-                    $encargado = User::where('email', $encargadoCorreo)->first();
-                    if ($encargado) {
-                        $encargadoId = $encargado->id;
-                    }
-                }
-
-                $clientModel = ClientModel::firstOrCreate(
-                    ['phone' => $dato['numero']],
-                    [
-                        'name' => $clientName,
-                        'dui' => $clientDui,
-                        'date' => $currentDate,
-                        'moratorium_classification_id' => $plantilla->moratorium_classification_id ?? null
-                    ]
-                );
-
-                if ($encargadoId && $user = User::find($encargadoId)) {
-                    $clientModel->users()->syncWithoutDetaching([$encargadoId]);
-                }
-
-                $chatId = "503{$dato['numero']}";
-                $msgPersonalizado = str_replace(
-                    ['{nombre}', '{factura}', '{monto}'],
-                    [$dato['nombre'], $dato['factura'], $dato['monto']],
-                    $plantilla->template
-                );
 
                 try {
+                    $clientName = $dato['nombre'] ?? 'Cliente Sin Nombre';
+                    $clientDui = $dato['dui'] ?? '000000000';
+                    $currentDate = now()->toDateString();
+                    $numeroDestino = $dato['numero'];
+
+                    if (empty($numeroDestino)) {
+                        throw new \Exception("Número vacío en el excel");
+                    }
+
+                    $encargadoCorreo = $dato['encargadoCorreo'] ?? null;
+                    $encargadoId = $senderUserId;
+
+                    if ($encargadoCorreo) {
+                        $encargado = User::where('email', $encargadoCorreo)->first();
+                        if ($encargado) {
+                            $encargadoId = $encargado->id;
+                        }
+                    }
+
+                    $clientModel = ClientModel::firstOrCreate(
+                        ['phone' => $numeroDestino],
+                        [
+                            'name' => $clientName,
+                            'dui' => $clientDui,
+                            'date' => $currentDate,
+                            'moratorium_classification_id' => $plantilla->moratorium_classification_id ?? null
+                        ]
+                    );
+
+                    if ($encargadoId && $user = User::find($encargadoId)) {
+                        $clientModel->users()->syncWithoutDetaching([$encargadoId]);
+                    }
+
+                    $chatId = "503{$numeroDestino}";
+                    $msgPersonalizado = str_replace(
+                        ['{nombre}', '{factura}', '{monto}'],
+                        [$dato['nombre'], $dato['factura'], $dato['monto']],
+                        $plantilla->template
+                    );
+
+                    // ENVÍO API
                     $response = $client->post($sendMessageUrl, [
                         'headers' => $this->getDynamicHeaders($apiKey),
                         'json' => [
@@ -226,16 +233,30 @@ class MessageController extends Controller
                         ],
                     ]);
 
+                    $responseBody = json_decode($response->getBody()->getContents(), true);
+
+                    // Detección de error
+                    $apiFailed = false;
                     if ($response->getStatusCode() >= 400) {
+                        $apiFailed = true;
+                    } elseif (isset($responseBody['status']) && $responseBody['status'] === false) {
+                        $apiFailed = true;
+                    }
+
+                    if ($apiFailed) {
+                        Log::warning("Envío fallido API para $numeroDestino: " . json_encode($responseBody));
                         $totalFailed++;
+
+                        sleep(6); // <--- AQUÍ FALTABA EL SLEEP: Pausa obligatoria antes de saltar
                         continue;
                     }
 
+                    // ÉXITO
                     ClientMessage::create([
                         'client_id' => $clientModel->id,
                         'whatsapp_instance_id' => $instance->id,
                         'from_number' => $instance->phone,
-                        'to_number' => $dato['numero'],
+                        'to_number' => $numeroDestino,
                         'message' => $msgPersonalizado,
                         'direction' => 'outbound',
                         'is_read' => true,
@@ -247,143 +268,31 @@ class MessageController extends Controller
                 } catch (ClientException | ServerException | \Exception $e) {
 
                     $numeroDebug = $dato['numero'] ?? 'desconocido';
-                    $errorDetails = method_exists($e, 'hasResponse') ? $e->getResponse()->getBody()->getContents() : $e->getMessage();
-                    Log::error("Fallo de API: Error al intentar enviar al número $numeroDebug. Detalles: " . $errorDetails);
+                    $mensajeError = method_exists($e, 'getResponse') && $e->getResponse()
+                        ? $e->getResponse()->getBody()->getContents()
+                        : $e->getMessage();
+
+                    Log::error("Saltando número $numeroDebug por error: " . substr($mensajeError, 0, 200));
 
                     $totalFailed++;
 
+                    sleep(6); // <--- AQUÍ FALTABA EL SLEEP: Pausa obligatoria antes de saltar
+                    continue;
                 }
 
-                // --- ¡¡AQUÍ ESTÁ LA PAUSA!! ---
-                sleep(6); // Pausa de 6 segundos para cumplir con la API
+                // Pausa normal si todo salió bien
+                sleep(6);
 
             } // Fin foreach $numeros
         } // Fin foreach $datosPorCategoria
 
         session()->forget('numeros_por_categoria');
-        $mensajeFinal = "Proceso terminado. Mensajes enviados: {$totalSent}. Fallidos: {$totalFailed}.";
-        return back()->with('status', $mensajeFinal);
+        $mensajeFinal = "Proceso terminado. Mensajes enviados: {$totalSent}. Fallidos (saltados): {$totalFailed}.";
+
+        $tipoAlerta = ($totalFailed > 0) ? 'warning' : 'status';
+
+        return back()->with($tipoAlerta, $mensajeFinal);
     }
-
-
-    // ----------------------------------------------------------------------
-    // RESPUESTA MANUAL
-    // ----------------------------------------------------------------------
-
-    public function reply(Request $request)
-    {
-        $request->validate([
-            'phone' => 'required|string',
-            'whatsapp_instance_id' => 'required|exists:whatsapp_instances,id',
-            'message' => 'nullable|string|max:4096',
-            'media_file' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp3,ogg,mp4,pdf|max:10240',
-        ]);
-
-        if (empty($request->message) && !$request->hasFile('media_file')) {
-            return back()->withErrors(['message' => 'Debes escribir un mensaje o adjuntar un archivo.']);
-        }
-
-        $instance = WhatsappInstance::findOrFail($request->whatsapp_instance_id);
-        $numero = preg_replace('/[^0-9]/', '', $request->phone);
-
-
-        $clientModel = ClientModel::firstOrCreate(
-            ['phone' => $numero],
-            ['name' => 'Cliente Chat', 'dui' => '000000000', 'date' => now()->toDateString()]
-        );
-        $clientModel->users()->syncWithoutDetaching([$senderUserId]);
-
-        // --- ¡¡CORRECCIÓN DE SUPER ADMIN (2/3)!! ---
-        if (!$user->isSuperAdmin() && !$user->hasRole('admin') && !$clientModel->users->contains($user)) {
-            return back()->withErrors(['message' => 'No tienes permiso para responder a este cliente.']);
-        }
-
-        $messageContent = $request->message;
-        $mediaUrl = null;
-        $mediaType = null;
-
-        try {
-
-            // CASO 1: SE ENVÍA UN ARCHIVO
-            if ($request->hasFile('media_file')) {
-                $file = $request->file('media_file');
-                $mimeType = $file->getMimeType();
-
-                $path = $file->store('media/' . $instance->id, 'public');
-                $mediaUrl = $path;
-
-                if (str_starts_with($mimeType, 'image/')) $mediaType = 'image';
-                elseif (str_starts_with($mimeType, 'audio/')) $mediaType = 'audio';
-                elseif (str_starts_with($mimeType, 'video/')) $mediaType = 'video';
-                else $mediaType = 'document';
-
-                $sendFileUrl = "https://wasenderapi.com/api/send-file";
-
-                $response = $clientGuzzle->post($sendFileUrl, [
-                    'headers' => [
-                        'Authorization' => 'Bearer ' . $instance->api_key,
-                    ],
-                    'multipart' => [
-                        ['name' => 'session', 'contents' => $instance->name],
-                        ['name' => 'to', 'contents' => $apiRecipient],
-                        ['name' => 'caption', 'contents' => $messageContent],
-                        [
-                            'name'     => 'file',
-                            'contents' => fopen(storage_path('app/public/' . $path), 'r'),
-                            'filename' => $file->getClientOriginalName()
-                        ]
-                    ]
-                ]);
-
-            // CASO 2: SE ENVÍA SOLO TEXTO
-            } else {
-                $sendMessageUrl = "https://wasenderapi.com/api/send-message";
-                $response = $clientGuzzle->post($sendMessageUrl, [
-                    'headers' => $this->getDynamicHeaders($instance->api_key),
-                    'json' => [
-                        'session' => $instance->name,
-                        'to'      => $apiRecipient,
-                        'text'    => $messageContent
-                    ],
-                ]);
-            }
-
-            if ($response->getStatusCode() >= 400) {
-                $errorBody = $response->getBody()->getContents();
-                Log::error('API ERROR al responder:', ['error' => $errorBody]);
-                return back()->withErrors(['message' => 'Error de la API: ' . $errorBody]);
-            }
-
-        } catch (ClientException | ServerException | \Exception $e) {
-            $errorDetails = method_exists($e, 'hasResponse') ? $e->getResponse()->getBody()->getContents() : 'Error: ' . $e->getMessage();
-            Log::error('Guzzle/API Error al responder:', ['error' => $errorDetails]);
-            return back()->withErrors(['message' => $errorDetails]);
-        }
-
-        //  Guardar mensaje localmente
-        try {
-            ClientMessage::create([
-                'client_id' => $clientModel->id,
-                'whatsapp_instance_id' => $instance->id,
-                'from_number' => $instance->phone,
-                'to_number' => $numero,
-                'message' => $messageContent,
-                'media_url' => $mediaUrl,
-                'media_type' => $mediaType,
-                'direction' => 'outbound',
-                'is_read' => true,
-                'received_at' => now(),
-                'user_id' => $senderUserId,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error FATAL al guardar respuesta localmente:', [$e->getMessage()]);
-            return back()->withErrors(['message' => 'Error de BD al guardar la respuesta.']);
-        }
-
-        return redirect()->route('responses', ['phone' => $numero])->with(['success' => 'Mensaje enviado.']);
-    }
-
     // ----------------------------------------------------------------------
     // FILTRADO DE RESPUESTAS
     // ----------------------------------------------------------------------

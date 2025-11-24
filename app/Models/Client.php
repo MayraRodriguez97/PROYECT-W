@@ -11,6 +11,7 @@ class Client extends Model
 {
     protected $fillable = [
         'phone',
+        'whatsapp_jid',
         'name',
         'dui',
         'date',
