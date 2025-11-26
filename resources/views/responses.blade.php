@@ -561,9 +561,9 @@ html.dark-mode emoji-picker::part(emoji) {
                     <label for="media_file" class="icon-button" title="Adjuntar archivo">
                         <i class="fas fa-paperclip"></i>
                         <input type="file" name="media_file" id="media_file"
-                            accept="image/*,audio/*,video/*,.pdf"
-                            style="display: none;"
-                            onchange="showFileName(this)">
+                               accept="image/*,audio/*,video/*,.pdf"
+                               style="display: none;"
+                               onchange="showFileName(this)">
                     </label>
                     <span id="file-name-preview"></span>
 

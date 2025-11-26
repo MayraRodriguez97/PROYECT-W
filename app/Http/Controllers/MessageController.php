@@ -286,38 +286,20 @@ class MessageController extends Controller
                 }
 
                 // Pausa normal (aleatoria para parecer humano)
-                sleep(rand(3, 6));
+                sleep(6);
 
             } // Fin foreach $numeros
         } // Fin foreach $datosPorCategoria
 
         session()->forget('numeros_por_categoria');
+        $mensajeFinal = "Proceso terminado. Mensajes enviados: {$totalSent}. Fallidos: {$totalFailed}.";
+        return back()->with('status', $mensajeFinal);
 
-        // --- REPORTE DETALLADO AL USUARIO ---
-        $totalProcesados = $totalSent + $totalFailed;
-
-        if ($totalFailed === 0 && $totalSent > 0) {
-            // Todo perfecto (VERDE)
-            $mensaje = "✅ ¡Éxito Total! Se enviaron {$totalSent} mensajes correctamente.";
-            return back()->with('success', $mensaje);
-        } elseif ($totalSent === 0 && $totalFailed > 0) {
-            // Todo falló (ROJO)
-            $mensaje = "❌ Error Total. No se envió ningún mensaje. Fallaron {$totalFailed}. Revisa los logs.";
-            return back()->withErrors(['message' => $mensaje]);
-        } else {
-            // Mezcla (AMARILLO)
-            $mensaje = "⚠️ Proceso finalizado con observaciones:\n" .
-                "• Total Procesados: {$totalProcesados}\n" .
-                "• Enviados con Éxito: {$totalSent}\n" .
-                "• Fallidos/Saltados: {$totalFailed}";
-            return back()->with('warning', $mensaje);
-        }
     }
 
     // ----------------------------------------------------------------------
     // 3. RESPUESTA MANUAL (AGREGADA NUEVAMENTE)
     // ----------------------------------------------------------------------
-
     public function reply(Request $request)
     {
         $request->validate([
@@ -458,7 +440,7 @@ class MessageController extends Controller
             $clientModel->users()->syncWithoutDetaching([$user->id]);
 
             $conversacion = ClientMessage::where('client_id', $clientModel->id)
-                ->orderBy('id', 'asc') // <--- CAMBIA 'received_at' POR 'id'
+                ->orderBy('received_at', 'asc')
                 ->get();
 
             $lastMessage = $conversacion->last();

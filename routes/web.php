@@ -71,11 +71,11 @@ Route::get('/enviar-mensajes', [MessageController::class, 'formSendMessages'])->
     // Rutas CRUD usuarios — solo para usuarios con permiso 'manage-users'
     Route::resource('users', UserController::class)->middleware('can:manage-users');
 
-    Route::get('/roles/index', [\App\Http\Controllers\RolController::class, 'index'] )->name('roles.index');//->middleware('can:rol-write');//ruta de lectur
-    Route::post('/roles/store',  [\App\Http\Controllers\RolController::class, 'store'] )->name('roles.store');//->middleware('can:rol-write');//escritura
-    Route::post('/roles/destroy', [\App\Http\Controllers\RolController::class, 'destroy'] )->name('roles.destroy');//->middleware('can:rol-write');
-    Route::post('/roles/addPermissions', [\App\Http\Controllers\RolController::class, 'addPermissions'] )->name('roles.addPermissions');//->middleware('can:rol-write');
-    Route::get('/roles/getPermissions', [\App\Http\Controllers\RolController::class, 'getPermissions'] )->name('roles.getPermissions');//->middleware('can:rol-write');
+    Route::get('/roles/index', [\App\Http\Controllers\RolController::class, 'index'] )->name('roles.index')->middleware('can:rol-write');//ruta de lectur
+    Route::post('/roles/store',  [\App\Http\Controllers\RolController::class, 'store'] )->name('roles.store')->middleware('can:rol-write');//escritura
+    Route::post('/roles/destroy', [\App\Http\Controllers\RolController::class, 'destroy'] )->name('roles.destroy')->middleware('can:rol-write');
+    Route::post('/roles/addPermissions', [\App\Http\Controllers\RolController::class, 'addPermissions'] )->name('roles.addPermissions')->middleware('can:rol-write');
+    Route::get('/roles/getPermissions', [\App\Http\Controllers\RolController::class, 'getPermissions'] )->name('roles.getPermissions')->middleware('can:rol-write');
 
     Route::get('/permission/index', [\App\Http\Controllers\PermissionController::class, 'index'])->name('permission.index'); // lectura
     Route::post('/permission/store', [\App\Http\Controllers\PermissionController::class, 'store'])->name('permission.store'); // creación/actualización
